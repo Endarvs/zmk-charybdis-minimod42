@@ -99,7 +99,11 @@
             ;
     };
 
-    /* Опциональные энкодеры EC11 на свободных пинах D14 (P1.11) и D15 (P1.13) из заводского DT */
+    /*
+     * Опциональные энкодеры EC11 на свободных пинах D14 (P1.11) и D15 (P1.13) из заводского DT.
+     * Узел keymap-sensors по умолчанию закомментирован, чтобы ZMK не создавал пустую GATT-характеристику
+     * SENSOR_STATE (которая в ZMK main мешает подписке BLE-периферии). Раскомментируйте при распайке EC11.
+     */
     left_encoder: encoder_left {
         compatible = "alps,ec11";
         a-gpios = <&pro_micro 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
@@ -116,11 +120,13 @@
         status = "disabled";
     };
 
+    /*
     sensors: sensors {
         compatible = "zmk,keymap-sensors";
         sensors = <&left_encoder &right_encoder>;
         triggers-per-rotation = <20>;
     };
+    */
 
     /* Базовый узел listener (включается только на Central: charybdis_right или charybdis_dongle) */
     trackball_listener: trackball_listener {

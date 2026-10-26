@@ -22,13 +22,14 @@
         events = <0>;
     };
 
+    /* ВАЖНО: reg = <1> обязан совпадать с charybdis_pmw3610.dtsi и быть ненулевым (см. central.c:90) */
     split_inputs {
         #address-cells = <1>;
         #size-cells = <0>;
 
-        trackball_split: trackball_split@0 {
+        trackball_split: trackball_split@1 {
             compatible = "zmk,input-split";
-            reg = <0>;
+            reg = <1>;
             status = "okay";
         };
     };

@@ -1,3 +1,5 @@
+name: zmk-charybdis-minimod42
 build:
+  cmake: .
   settings:
     board_root: .

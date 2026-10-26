@@ -68,14 +68,22 @@
 };
 
 / {
-    /* Канал пересылки движений трекбола по BLE для режима с внешним USB-донглом */
+    /*
+     * Канал пересылки движений трекбола по BLE для режима с внешним USB-донглом.
+     * ВАЖНО:
+     * 1) reg = <1> (НЕ <0>!), так как в ZMK app/src/split/bluetooth/central.c значение reg == 0
+     *    трактуется как неинициализированный слот (!peripheral_input_slots[i].reg -> вечный pending).
+     * 2) status = "disabled" по умолчанию, чтобы в автономном режиме charybdis_right (без донгла)
+     *    Central не ждал удалённый input-split от левой половины. Включается в charybdis_right_dongle.overlay.
+     */
     split_inputs {
         #address-cells = <1>;
         #size-cells = <0>;
 
-        trackball_split: trackball_split@0 {
+        trackball_split: trackball_split@1 {
             compatible = "zmk,input-split";
-            reg = <0>;
+            reg = <1>;
+            status = "disabled";
         };
     };
 };
