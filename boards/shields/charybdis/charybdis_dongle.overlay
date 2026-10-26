@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 2026 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Central Wireless Dongle — принимает по BLE обе половины (charybdis_left + charybdis_right_dongle)
+ * и поток трекбола (trackball_split@0), обрабатывает слои, Auto-Mouse, Scroll, Snipe и ZMK Studio.
+ * Совместим с любой BLE-платой ZMK (nice_nano//zmk, xiao_ble//zmk и др.).
+ */
+
+#include "charybdis-layouts.dtsi"
+
+/ {
+    chosen {
+        zmk,kscan = &mock_kscan;
+        zmk,physical-layout = &charybdis_6col_layout;
+    };
+
+    mock_kscan: mock_kscan_0 {
+        compatible = "zmk,kscan-mock";
+        columns = <0>;
+        rows = <0>;
+        events = <0>;
+    };
+
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        trackball_split: trackball_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            status = "okay";
+        };
+    };
+
+    trackball_listener: trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&trackball_split>;
+        status = "okay";
+    };
+};

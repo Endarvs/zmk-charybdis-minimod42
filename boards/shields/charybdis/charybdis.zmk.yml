@@ -1,0 +1,18 @@
+file_format: "1"
+id: charybdis
+name: Charybdis Mini MOD (3x6+3, 42-key)
+type: shield
+url: https://bastardkb.com/charybdis/
+requires:
+  - pro_micro
+features:
+  - keys
+  - pointer
+  - studio
+  - underglow
+  - encoder
+siblings:
+  - charybdis_left
+  - charybdis_right
+  - charybdis_right_dongle
+  - charybdis_dongle

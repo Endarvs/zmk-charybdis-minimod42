@@ -1,0 +1,16 @@
+/*
+ * Copyright (c) 2026 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Left Half (Peripheral) — используется одинаково И в обычном BT-режиме, И в режиме с USB-донглом!
+ * Матрица клавиш и адресная подсветка WS2812 наследуются из charybdis.dtsi без смещения (col-offset = 0).
+ */
+
+#include "charybdis.dtsi"
+
+/* Раскомментируйте блок ниже, если на левую половину распаян энкодер EC11: */
+/*
+&left_encoder {
+    status = "okay";
+};
+*/

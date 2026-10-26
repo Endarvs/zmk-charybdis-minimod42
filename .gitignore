@@ -1,0 +1,27 @@
+# Build & West workspace artifacts (keep /zephyr/module.yml tracked!)
+build/
+.west/
+/zephyr/*
+!/zephyr/module.yml
+zmk/
+modules/
+tools/
+bootloader/
+zmk-pmw3610-driver/
+prospector-zmk-module/
+out/
+firmware/
+*.uf2
+*.bin
+*.hex
+*.elf
+
+# Original factory UF2 archive (kept locally for reference)
+miniMOD36-studio.zip
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__pycache__/

@@ -1,0 +1,64 @@
+/*
+ * Пользовательские и восстановленные заводские макросы (V&Z-MINI36M)
+ */
+
+#include <dt-bindings/zmk/rgb.h>
+
+/ {
+    macros {
+        /* История буфера обмена Windows (Win + V) */
+        clip_hist: clip_hist {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings
+                = <&macro_press &kp LGUI>
+                , <&macro_tap &kp V>
+                , <&macro_release &kp LGUI>
+                ;
+        };
+
+        /* Переключение языка раскладки ОС (Alt + Shift) */
+        lang_alt_shift: lang_alt_shift {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings
+                = <&macro_press &kp LALT>
+                , <&macro_tap &kp LSHFT>
+                , <&macro_release &kp LALT>
+                ;
+        };
+
+        /* Переключение языка раскладки ОС (Win + Space) */
+        lang_win_space: lang_win_space {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings
+                = <&macro_press &kp LGUI>
+                , <&macro_tap &kp SPACE>
+                , <&macro_release &kp LGUI>
+                ;
+        };
+
+        /*
+         * Восстановленные и исправленные макросы индикации слоёв из заводского UF2
+         * (в заводской прошивке в To2_macro была опечатка &to 1 вместо &to 2 — исправлено):
+         */
+        To0_macro: To0_macro {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&rgb_ug RGB_EFF &rgb_ug RGB_TOG &to 0>;
+        };
+
+        To1_macro: To1_macro {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&to 1 &rgb_ug RGB_COLOR_HSB(128,100,50)>;
+        };
+
+        To2_macro: To2_macro {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&to 2 &rgb_ug RGB_COLOR_HSB(250,100,50)>;
+        };
+    };
+};

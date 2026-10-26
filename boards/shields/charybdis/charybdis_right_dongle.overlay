@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 2026 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Right Half (Peripheral — режим С ВНЕШНИМ USB-ДОНГЛОМ).
+ * Правая половина работает в экономичном режиме Peripheral и пересылает нажатия клавиш
+ * и движения трекбола PMW3610 по BLE (через zmk,input-split) на центральный донгл.
+ */
+
+#include "charybdis.dtsi"
+#include "charybdis_pmw3610.dtsi"
+
+&default_transform {
+    col-offset = <6>;
+};
+
+&five_column_transform {
+    col-offset = <6>;
+};
+
+/* В режиме донгла правая половина пересылает данные сенсора &trackball в BLE-канал &trackball_split */
+&trackball_split {
+    device = <&trackball>;
+    status = "okay";
+};
+
+/* Раскомментируйте блок ниже, если на правую половину распаян энкодер EC11: */
+/*
+&right_encoder {
+    status = "okay";
+};
+*/

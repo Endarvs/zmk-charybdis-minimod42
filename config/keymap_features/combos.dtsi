@@ -1,0 +1,72 @@
+/*
+ * Комбо-сочетания для Charybdis Mini MOD (42 клавиши: 3x6 + 3L/3R Thumbs)
+ */
+
+/ {
+    combos {
+        compatible = "zmk,combos";
+
+        /* G + H (17 + 18) -> Caps Word (умный CapsLock на одно слово / КОНСТАНТУ_С_ПОДЧЕРКИВАНИЕМ) */
+        combo_caps_word {
+            timeout-ms = <45>;
+            key-positions = <17 18>;
+            bindings = <&caps_word>;
+            layers = <0 1>;
+        };
+
+        /* W + E (2 + 3) -> быстрый Escape левой рукой */
+        combo_esc_left {
+            timeout-ms = <40>;
+            key-positions = <2 3>;
+            bindings = <&kp ESC>;
+            layers = <0 1>;
+        };
+
+        /* X + C (26 + 27) -> Левый клик мыши (LCLK) без смещения руки с нижнего ряда */
+        combo_lclk {
+            timeout-ms = <40>;
+            key-positions = <26 27>;
+            bindings = <&mkp LCLK>;
+            layers = <0 1 6 7 8>;
+        };
+
+        /* C + V (27 + 28) -> Правый клик мыши (RCLK) */
+        combo_rclk {
+            timeout-ms = <40>;
+            key-positions = <27 28>;
+            bindings = <&mkp RCLK>;
+            layers = <0 1 6 7 8>;
+        };
+
+        /* X + V (26 + 28) -> Средний клик мыши (MCLK) */
+        combo_mclk {
+            timeout-ms = <40>;
+            key-positions = <26 28>;
+            bindings = <&mkp MCLK>;
+            layers = <0 1 6 7 8>;
+        };
+
+        /* Внутренние тамб-клавиши (38 + 39) -> Переключение режима БЕЗ Home-Row Mods (Raw / Игровой слой) */
+        combo_toggle_raw_game {
+            timeout-ms = <50>;
+            key-positions = <38 39>;
+            bindings = <&tog 1>;
+        };
+
+        /* Внешние верхние углы левой половины (0 + 5) + нижний угол (24) -> Безопасный вход в UF2 Bootloader левой половины */
+        combo_boot_left {
+            timeout-ms = <50>;
+            key-positions = <0 5 24>;
+            bindings = <&bootloader>;
+            layers = <0 1 5>;
+        };
+
+        /* Внешние верхние углы правой половины (6 + 11) + нижний угол (35) -> Безопасный вход в UF2 Bootloader правой половины / донгла */
+        combo_boot_right {
+            timeout-ms = <50>;
+            key-positions = <6 11 35>;
+            bindings = <&bootloader>;
+            layers = <0 1 5>;
+        };
+    };
+};

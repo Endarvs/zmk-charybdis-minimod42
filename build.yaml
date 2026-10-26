@@ -1,0 +1,77 @@
+# =============================================================================
+# Build Matrix — Charybdis Mini MOD 42-Key (3x6 + 3L/3R Thumbs, V&Z-MINI36M)
+# ZMK main (Zephyr 4.1 / HWMv2) + ZMK Studio + Wireless Dongle Support
+# =============================================================================
+#
+# КАКИЕ ФАЙЛЫ ПРОШИВАТЬ:
+#
+# ВАРИАНТ А — Обычный режим БЕЗ донгла (Правая половина = Главная / Central):
+#   1. Левая половина:   charybdis_left-nice_nano_v2-zmk.uf2
+#   2. Правая половина:  charybdis_right_central_bt-nice_nano_v2-studio.uf2
+#
+# ВАРИАНТ Б — Режим С USB-ДОНГЛОМ (Донгл = Главный / Central, обе половины = Peripheral):
+#   1. Левая половина:   charybdis_left-nice_nano_v2-zmk.uf2
+#   2. Правая половина:  charybdis_right_peripheral_for_dongle-nice_nano_v2.uf2
+#   3. USB-донгл:        charybdis_dongle_central-nice_nano_v2-studio.uf2
+#                        (или charybdis_dongle_central-xiao_ble-studio.uf2 для Seeed XIAO BLE)
+#
+# ВАЖНО: При переходе между Вариантом А и Вариантом Б сначала прошейте
+#        settings_reset-*.uf2 на все устройства для очистки старых BLE-привязок!
+# =============================================================================
+
+---
+include:
+  # ── 1. Универсальная левая половина (подходит и для BT-режима, и для Донгла) ──
+  - board: nice_nano//zmk
+    shield: charybdis_left
+    artifact-name: charybdis_left-nice_nano_v2-zmk
+
+  # ── 2. Режим А (БЕЗ донгла): Правая половина Central + ZMK Studio ──
+  - board: nice_nano//zmk
+    shield: charybdis_right
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    artifact-name: charybdis_right_central_bt-nice_nano_v2-studio
+
+  # ── 3. Режим Б (С ДОНГЛОМ): Правая половина Peripheral (передаёт трекбол на донгл) ──
+  - board: nice_nano//zmk
+    shield: charybdis_right_dongle
+    artifact-name: charybdis_right_peripheral_for_dongle-nice_nano_v2
+
+  # ── 4. Режим Б (С ДОНГЛОМ): Центральный донгл на nice!nano v2 + ZMK Studio ──
+  - board: nice_nano//zmk
+    shield: charybdis_dongle
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    artifact-name: charybdis_dongle_central-nice_nano_v2-studio
+
+  # ── 5. Режим Б (С ДОНГЛОМ): Центральный донгл на Seeed XIAO nRF52840 BLE + ZMK Studio ──
+  - board: xiao_ble//zmk
+    shield: charybdis_dongle
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    artifact-name: charybdis_dongle_central-xiao_ble-studio
+
+  # ── 6. Сброс BLE-настроек (Settings Reset) ──
+  - board: nice_nano//zmk
+    shield: settings_reset
+    artifact-name: settings_reset-nice_nano_v2-zmk
+
+  - board: xiao_ble//zmk
+    shield: settings_reset
+    artifact-name: settings_reset-xiao_ble-zmk
+
+  # ── ОПЦИОНАЛЬНО: Донгл с экраном nice!view (раскомментируйте при наличии экрана) ──
+  # - board: nice_nano//zmk
+  #   shield: charybdis_dongle nice_view_adapter nice_view
+  #   snippet: studio-rpc-usb-uart
+  #   cmake-args: -DCONFIG_ZMK_STUDIO=y
+  #   artifact-name: charybdis_dongle_nice_view-nice_nano_v2-studio
+
+  # ── ОПЦИОНАЛЬНО: Донгл с цветным экраном Prospector ST7789V2 ──
+  # (также раскомментируйте prospector-zmk-module в config/west.yml)
+  # - board: xiao_ble//zmk
+  #   shield: charybdis_dongle prospector_adapter
+  #   snippet: studio-rpc-usb-uart
+  #   cmake-args: -DCONFIG_ZMK_STUDIO=y
+  #   artifact-name: charybdis_dongle_prospector-xiao_ble-studio

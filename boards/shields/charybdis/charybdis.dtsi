@@ -1,0 +1,130 @@
+/*
+ * Copyright (c) 2026 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Common hardware definition for physical halves of V&Z-MINI36M (Charybdis Mini MOD 42-key)
+ * Reverse-engineered 1:1 from factory charybdis_{left,right}-nice_nano_v2-zmk.uf2.
+ */
+
+#include <dt-bindings/led/led.h>
+#include "charybdis-layouts.dtsi"
+
+/*
+ * КРИТИЧНО ДЛЯ ZEPHYR 4.1 + ЭТОЙ ПЛАТЫ:
+ * Плата использует оба NFC-пина nRF52840 как обычные GPIO:
+ * - P0.09 (&pro_micro 10 / D10 / NFC1) -> Matrix Col 2
+ * - P0.10 (&pro_micro 16 / D16 / NFC2) -> WS2812 RGB DIN
+ * В Zephyr 4.1 устаревший CONFIG_NFCT_PINS_AS_GPIOS=y удалён и заменён узлом &uicr.
+ */
+&uicr {
+    nfct-pins-as-gpios;
+};
+
+/*
+ * Адресная RGB-подсветка WS2812 (по 21 светодиоду на каждой половине) на пине P0.10 (SPI3 MOSI).
+ */
+&pinctrl {
+    spi3_default: spi3_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 10)>;
+        };
+    };
+
+    spi3_sleep: spi3_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 10)>;
+            low-power-enable;
+        };
+    };
+};
+
+&spi3 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+
+    pinctrl-0 = <&spi3_default>;
+    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+
+        /* SPI */
+        reg = <0>;
+        spi-max-frequency = <4000000>;
+
+        /* WS2812: ровно 21 светодиод на половину (504 байта SPI буфера в заводском UF2) */
+        chain-length = <21>;
+        spi-one-frame = <0x70>;
+        spi-zero-frame = <0x40>;
+        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
+    };
+};
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+        zmk,physical-layout = &charybdis_6col_layout;
+        zmk,underglow = &led_strip;
+    };
+
+    /*
+     * Матрица клавиш V&Z-MINI36M (одинаковая распиновка на левой и правой половинах!).
+     * ВАЖНОЕ ОТЛИЧИЕ ОТ ОБЫЧНЫХ CHARYBDIS MINI (280Zo / BastardKB):
+     * - Направление диодов: row2col
+     * - Строки сдвинуты: Row 0 = D21 (P0.31), Row 1 = D18 (P1.15), Row 2 = D5 (P0.24), Row 3 = D4 (P0.22).
+     *   Пин D9 (P1.06) здесь НЕ используется!
+     */
+    kscan0: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        diode-direction = "row2col";
+        wakeup-source;
+        debounce-press-ms = <5>;
+        debounce-release-ms = <5>;
+
+        col-gpios
+            = <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> /* Col 0: P0.02 (D19 / A1) */
+            , <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> /* Col 1: P0.29 (D20 / A2) */
+            , <&pro_micro 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> /* Col 2: P0.09 (D10 / NFC1) */
+            , <&pro_micro 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> /* Col 3: P1.00 (D6) */
+            , <&pro_micro 7  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> /* Col 4: P0.11 (D7) */
+            , <&pro_micro 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)> /* Col 5: P1.04 (D8) */
+            ;
+
+        row-gpios
+            = <&pro_micro 21 GPIO_ACTIVE_HIGH> /* Row 0: P0.31 (D21 / A3) */
+            , <&pro_micro 18 GPIO_ACTIVE_HIGH> /* Row 1: P1.15 (D18 / A0) */
+            , <&pro_micro 5  GPIO_ACTIVE_HIGH> /* Row 2: P0.24 (D5) */
+            , <&pro_micro 4  GPIO_ACTIVE_HIGH> /* Row 3: P0.22 (D4) */
+            ;
+    };
+
+    /* Опциональные энкодеры EC11 на свободных пинах D14 (P1.11) и D15 (P1.13) из заводского DT */
+    left_encoder: encoder_left {
+        compatible = "alps,ec11";
+        a-gpios = <&pro_micro 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <80>;
+        status = "disabled";
+    };
+
+    right_encoder: encoder_right {
+        compatible = "alps,ec11";
+        a-gpios = <&pro_micro 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&pro_micro 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <80>;
+        status = "disabled";
+    };
+
+    sensors: sensors {
+        compatible = "zmk,keymap-sensors";
+        sensors = <&left_encoder &right_encoder>;
+        triggers-per-rotation = <20>;
+    };
+
+    /* Базовый узел listener (включается только на Central: charybdis_right или charybdis_dongle) */
+    trackball_listener: trackball_listener {
+        compatible = "zmk,input-listener";
+        status = "disabled";
+    };
+};

@@ -1,0 +1,167 @@
+/*
+ * Copyright (c) 2026 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Matrix Transforms & Physical Layouts for V&Z-MINI36M (Charybdis Mini MOD 42-key: 3x6 + 3L/3R thumbs)
+ * Shared identically across all shields (Left, Right Central, Right Peripheral, and Central Dongle).
+ */
+
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <physical_layouts.dtsi>
+
+/ {
+    /*
+     * Основная матрица трансформации — 42 клавиши (3x6 + 3 тамб-клавиши слева и 3 справа).
+     * Восстановлена 1-в-1 из заводского бинарника charybdis_right-nice_nano_v2-zmk.uf2 (@ 0x0005DC78):
+     * - Левая половина: колонки 0..5 (слева направо), тамб-кластер на RC(3,3), RC(3,4), RC(3,5).
+     * - Правая половина (col-offset = <6>): зеркальный порядок колонок 11..6 (от центра к мизинцу),
+     *   симметричный тамб-кластер из 3 клавиш на RC(3,11), RC(3,10), RC(3,9).
+     */
+    default_transform: keymap_transform_0 {
+        compatible = "zmk,matrix-transform";
+        columns = <12>;
+        rows = <4>;
+
+        map = <
+            RC(0,0) RC(0,1) RC(0,2) RC(0,3) RC(0,4) RC(0,5)   RC(0,11) RC(0,10) RC(0,9) RC(0,8) RC(0,7) RC(0,6)
+            RC(1,0) RC(1,1) RC(1,2) RC(1,3) RC(1,4) RC(1,5)   RC(1,11) RC(1,10) RC(1,9) RC(1,8) RC(1,7) RC(1,6)
+            RC(2,0) RC(2,1) RC(2,2) RC(2,3) RC(2,4) RC(2,5)   RC(2,11) RC(2,10) RC(2,9) RC(2,8) RC(2,7) RC(2,6)
+                                    RC(3,3) RC(3,4) RC(3,5)   RC(3,11) RC(3,10) RC(3,9)
+        >;
+    };
+
+    /*
+     * Дополнительная виртуальная матрица 3x5+3 (36 клавиш, без внешних мизинцевых колонок col 0 и col 6),
+     * доступная для переключения прямо в интерфейсе ZMK Studio.
+     */
+    five_column_transform: keymap_transform_1 {
+        compatible = "zmk,matrix-transform";
+        columns = <12>;
+        rows = <4>;
+
+        map = <
+            RC(0,1) RC(0,2) RC(0,3) RC(0,4) RC(0,5)   RC(0,11) RC(0,10) RC(0,9) RC(0,8) RC(0,7)
+            RC(1,1) RC(1,2) RC(1,3) RC(1,4) RC(1,5)   RC(1,11) RC(1,10) RC(1,9) RC(1,8) RC(1,7)
+            RC(2,1) RC(2,2) RC(2,3) RC(2,4) RC(2,5)   RC(2,11) RC(2,10) RC(2,9) RC(2,8) RC(2,7)
+                            RC(3,3) RC(3,4) RC(3,5)   RC(3,11) RC(3,10) RC(3,9)
+        >;
+    };
+
+    /*
+     * Эргономичная физическая раскладка 3x6 + 3/3 (42 клавиши) для ZMK Studio.
+     * Свойство kscan намеренно не задано на узле layout (берётся из chosen zmk,kscan),
+     * чтобы один и тот же layout работал и на физических половинах (&kscan0), и на донгле (&mock_kscan).
+     */
+    charybdis_6col_layout: charybdis_6col_layout {
+        compatible = "zmk,physical-layout";
+        display-name = "Charybdis Mini MOD 3x6+3 (42 keys)";
+        transform = <&default_transform>;
+
+        keys  //                     w   h    x    y     rot    rx    ry
+            /* ── Row 0: Left (0..5) & Right (6..11) ── */
+            = <&key_physical_attrs 100 100    0   38       0     0     0>
+            , <&key_physical_attrs 100 100  100   38       0     0     0>
+            , <&key_physical_attrs 100 100  200   12       0     0     0>
+            , <&key_physical_attrs 100 100  300    0       0     0     0>
+            , <&key_physical_attrs 100 100  400   12       0     0     0>
+            , <&key_physical_attrs 100 100  500   12       0     0     0>
+            , <&key_physical_attrs 100 100  900   12       0     0     0>
+            , <&key_physical_attrs 100 100 1000   12       0     0     0>
+            , <&key_physical_attrs 100 100 1100    0       0     0     0>
+            , <&key_physical_attrs 100 100 1200   12       0     0     0>
+            , <&key_physical_attrs 100 100 1300   38       0     0     0>
+            , <&key_physical_attrs 100 100 1400   38       0     0     0>
+
+            /* ── Row 1: Left (12..17) & Right (18..23) ── */
+            , <&key_physical_attrs 100 100    0  138       0     0     0>
+            , <&key_physical_attrs 100 100  100  138       0     0     0>
+            , <&key_physical_attrs 100 100  200  112       0     0     0>
+            , <&key_physical_attrs 100 100  300  100       0     0     0>
+            , <&key_physical_attrs 100 100  400  112       0     0     0>
+            , <&key_physical_attrs 100 100  500  112       0     0     0>
+            , <&key_physical_attrs 100 100  900  112       0     0     0>
+            , <&key_physical_attrs 100 100 1000  112       0     0     0>
+            , <&key_physical_attrs 100 100 1100  100       0     0     0>
+            , <&key_physical_attrs 100 100 1200  112       0     0     0>
+            , <&key_physical_attrs 100 100 1300  138       0     0     0>
+            , <&key_physical_attrs 100 100 1400  138       0     0     0>
+
+            /* ── Row 2: Left (24..29) & Right (30..35) ── */
+            , <&key_physical_attrs 100 100    0  238       0     0     0>
+            , <&key_physical_attrs 100 100  100  238       0     0     0>
+            , <&key_physical_attrs 100 100  200  212       0     0     0>
+            , <&key_physical_attrs 100 100  300  200       0     0     0>
+            , <&key_physical_attrs 100 100  400  212       0     0     0>
+            , <&key_physical_attrs 100 100  500  212       0     0     0>
+            , <&key_physical_attrs 100 100  900  212       0     0     0>
+            , <&key_physical_attrs 100 100 1000  212       0     0     0>
+            , <&key_physical_attrs 100 100 1100  200       0     0     0>
+            , <&key_physical_attrs 100 100 1200  212       0     0     0>
+            , <&key_physical_attrs 100 100 1300  238       0     0     0>
+            , <&key_physical_attrs 100 100 1400  238       0     0     0>
+
+            /* ── Row 3: Symmetrical 3+3 Thumb Clusters (36..38 Left, 39..41 Right) ── */
+            , <&key_physical_attrs 100 100  340  318    1200   390   368>
+            , <&key_physical_attrs 100 100  450  332    2400   500   382>
+            , <&key_physical_attrs 100 100  558  360    3600   608   410>
+            , <&key_physical_attrs 100 100  842  360 (-3600)   892   410>
+            , <&key_physical_attrs 100 100  950  332 (-2400)  1000   382>
+            , <&key_physical_attrs 100 100 1060  318 (-1200)  1110   368>
+            ;
+    };
+
+    /*
+     * Альтернативная физическая раскладка 3x5 + 3/3 (36 клавиш) для ZMK Studio.
+     */
+    charybdis_5col_layout: charybdis_5col_layout {
+        compatible = "zmk,physical-layout";
+        display-name = "Charybdis Mini MOD 3x5+3 (36 keys)";
+        transform = <&five_column_transform>;
+
+        keys  //                     w   h    x    y     rot    rx    ry
+            /* ── Row 0: Left (5) & Right (5) ── */
+            = <&key_physical_attrs 100 100  100   38       0     0     0>
+            , <&key_physical_attrs 100 100  200   12       0     0     0>
+            , <&key_physical_attrs 100 100  300    0       0     0     0>
+            , <&key_physical_attrs 100 100  400   12       0     0     0>
+            , <&key_physical_attrs 100 100  500   12       0     0     0>
+            , <&key_physical_attrs 100 100  900   12       0     0     0>
+            , <&key_physical_attrs 100 100 1000   12       0     0     0>
+            , <&key_physical_attrs 100 100 1100    0       0     0     0>
+            , <&key_physical_attrs 100 100 1200   12       0     0     0>
+            , <&key_physical_attrs 100 100 1300   38       0     0     0>
+
+            /* ── Row 1: Left (5) & Right (5) ── */
+            , <&key_physical_attrs 100 100  100  138       0     0     0>
+            , <&key_physical_attrs 100 100  200  112       0     0     0>
+            , <&key_physical_attrs 100 100  300  100       0     0     0>
+            , <&key_physical_attrs 100 100  400  112       0     0     0>
+            , <&key_physical_attrs 100 100  500  112       0     0     0>
+            , <&key_physical_attrs 100 100  900  112       0     0     0>
+            , <&key_physical_attrs 100 100 1000  112       0     0     0>
+            , <&key_physical_attrs 100 100 1100  100       0     0     0>
+            , <&key_physical_attrs 100 100 1200  112       0     0     0>
+            , <&key_physical_attrs 100 100 1300  138       0     0     0>
+
+            /* ── Row 2: Left (5) & Right (5) ── */
+            , <&key_physical_attrs 100 100  100  238       0     0     0>
+            , <&key_physical_attrs 100 100  200  212       0     0     0>
+            , <&key_physical_attrs 100 100  300  200       0     0     0>
+            , <&key_physical_attrs 100 100  400  212       0     0     0>
+            , <&key_physical_attrs 100 100  500  212       0     0     0>
+            , <&key_physical_attrs 100 100  900  212       0     0     0>
+            , <&key_physical_attrs 100 100 1000  212       0     0     0>
+            , <&key_physical_attrs 100 100 1100  200       0     0     0>
+            , <&key_physical_attrs 100 100 1200  212       0     0     0>
+            , <&key_physical_attrs 100 100 1300  238       0     0     0>
+
+            /* ── Row 3: Symmetrical 3+3 Thumb Clusters ── */
+            , <&key_physical_attrs 100 100  340  318    1200   390   368>
+            , <&key_physical_attrs 100 100  450  332    2400   500   382>
+            , <&key_physical_attrs 100 100  558  360    3600   608   410>
+            , <&key_physical_attrs 100 100  842  360 (-3600)   892   410>
+            , <&key_physical_attrs 100 100  950  332 (-2400)  1000   382>
+            , <&key_physical_attrs 100 100 1060  318 (-1200)  1110   368>
+            ;
+    };
+};

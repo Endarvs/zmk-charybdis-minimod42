@@ -1,0 +1,31 @@
+/*
+ * Copyright (c) 2026 The ZMK Contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Right Half (Central — режим БЕЗ донгла: подключение к ПК по Bluetooth или USB).
+ * Правая половина выступает центральной, локально считывает трекбол PMW3610 и обслуживает ZMK Studio.
+ */
+
+#include "charybdis.dtsi"
+#include "charybdis_pmw3610.dtsi"
+
+&default_transform {
+    col-offset = <6>;
+};
+
+&five_column_transform {
+    col-offset = <6>;
+};
+
+/* На Central слушатель трекбола читает напрямую локальный SPI-сенсор &trackball */
+&trackball_listener {
+    status = "okay";
+    device = <&trackball>;
+};
+
+/* Раскомментируйте блок ниже, если на правую половину распаян энкодер EC11: */
+/*
+&right_encoder {
+    status = "okay";
+};
+*/
