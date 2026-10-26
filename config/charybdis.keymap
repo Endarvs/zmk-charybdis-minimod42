@@ -1,8 +1,7 @@
 /*
  * =============================================================================
- * Раскладка Charybdis Mini MOD 42-Key (3x6 + по 3 клавиши тамб-кластера, V&Z-MINI36M)
- * Адаптирована под ZMK main (Zephyr 4.1), ZMK Studio, Auto-Mouse и режим USB-донгла.
- * =============================================================================
+ * Раскладка Charybdis Mini MOD 42-Key (3x6 + 3L/3R Thumbs, V&Z-MINI36M)
+ * Перенос конфигурации с Corne V4 (Foostan Corne.vil + AHK v2)
  *
  * Карта индексов 42 клавиш:
  * ╭──────┬──────┬──────┬──────┬──────┬──────╮   ╭──────┬──────┬──────┬──────┬──────┬──────╮
@@ -22,21 +21,19 @@
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
 #include <dt-bindings/zmk/pointing.h>
-#include <dt-bindings/zmk/rgb.h>
 
 /* Номера слоёв */
 #define L_BASE   0
-#define L_RAW    1
+#define L_SYM    1
 #define L_NAV    2
-#define L_NUM    3
-#define L_SYM    4
+#define L_FN     3
+#define L_GAME   4
 #define L_SYS    5
 #define L_MOUSE  6
 #define L_SNIPE  7
 #define L_SCROLL 8
 
 #include "keymap_features/behaviors.dtsi"
-#include "keymap_features/macros.dtsi"
 #include "keymap_features/combos.dtsi"
 
 /* Подключаем конвейер трекбола (Auto-Mouse + 2D Scroll + Snipe) только на Central */
@@ -48,97 +45,91 @@
     keymap {
         compatible = "zmk,keymap";
 
-        /* ── 0: BASE — Основной слой (QWERTY / ЙЦУКЕН со всеми 33 буквами + Timeless Home-Row Mods) ── */
+        /* ── 0: BASE — Основной слой (QWERTY / Вестник через MSKLC + Bilateral BRM) ── */
         base_layer {
             display-name = "Base";
             bindings = <
-                &kp GRAVE  &kp Q        &kp W        &kp E         &kp R         &kp T               &kp Y            &kp U         &kp I         &kp O        &kp P           &kp LBKT
-                &kp TAB    &hml LGUI A  &hml LALT S  &hml LSHFT D  &hml LCTRL F  &kp G               &kp H            &hmr RCTRL J  &hmr RSHFT K  &hmr RALT L  &hmr RGUI SEMI  &kp SQT
-                &kp LSHFT  &kp Z        &kp X        &kp C         &kp V         &kp B               &kp N            &kp M         &kp COMMA     &kp DOT      &kp FSLH        &kp RBKT
-                                                     &lt L_SCROLL ESC  &lt_q L_NAV SPACE  &lt L_MOUSE TAB   &lt L_SYM RET  &lt_q L_NUM BSPC  &lt_q L_SYS DEL
+                &kp GRAVE   &kp Q         &kp W         &kp E              &kp R              &kp T        &kp Y        &kp U              &kp I              &kp O         &kp P            &kp LBKT
+                &kp RBKT    &kp A         &kp S         &kp D              &kp F              &kp G        &kp H        &kp J              &kp K              &kp L         &kp SEMI         &kp SQT
+                &kp LS(N3)  &brm_l LGUI Z &brm_l LALT X &brm_l_sft LSHFT C &brm_l_ctl LCTRL V &kp B        &kp N        &brm_r_ctl RCTRL M &brm_r_sft RSHFT COMMA &brm_r LALT DOT &brm_r LGUI FSLH &kp LS(N4)
+                                                        &lt 3 DEL          &lt 1 SPACE        &lt 2 BSPC   &kp RET      &lt 1 F24          &kp LC(BSPC)
             >;
         };
 
-        /* ── 1: RAW / GAME — Чистый слой БЕЗ Home-Row Mods (для игр и скоростного набора; вкл/выкл комбо 38+39 или на L_SYS) ── */
-        raw_layer {
-            display-name = "Raw/Game";
-            bindings = <
-                &kp GRAVE  &kp Q  &kp W  &kp E  &kp R  &kp T               &kp Y          &kp U             &kp I          &kp O    &kp P     &kp LBKT
-                &kp LCTRL  &kp A  &kp S  &kp D  &kp F  &kp G               &kp H          &kp J             &kp K          &kp L    &kp SEMI  &kp SQT
-                &kp LSHFT  &kp Z  &kp X  &kp C  &kp V  &kp B               &kp N          &kp M             &kp COMMA      &kp DOT  &kp FSLH  &kp RBKT
-                                  &lt L_SCROLL ESC  &kp SPACE  &kp LALT    &lt L_SYM RET  &lt_q L_NUM BSPC  &lt_q L_SYS DEL
-            >;
-        };
-
-        /* ── 2: NAV — Навигация, буфер обмена, переключение языка и эмуляция мыши с клавиш ── */
-        nav_layer {
-            display-name = "Nav";
-            bindings = <
-                &trans     &kp LC(Z)  &msc SCRL_LEFT  &mmv MOVE_UP    &msc SCRL_RIGHT  &msc SCRL_UP        &kp PG_UP       &kp HOME        &kp UP    &kp END    &kp INS          &kp BSPC
-                &caps_word &kp LGUI   &mmv MOVE_LEFT  &mmv MOVE_DOWN  &mmv MOVE_RIGHT  &msc SCRL_DOWN      &kp PG_DN       &kp LEFT        &kp DOWN  &kp RIGHT  &lang_alt_shift  &lang_win_space
-                &trans     &kp LC(Z)  &kp LC(X)       &kp LC(C)       &kp LC(V)        &clip_hist          &kp LC(LS(Z))   &mkp LCLK       &mkp MCLK &mkp RCLK  &kp PSCRN        &trans
-                                                      &trans          &trans           &trans              &kp RET         &kp BSPC        &kp DEL
-            >;
-        };
-
-        /* ── 3: NUM — Цифровой блок (Numpad слева/справа) и арифметика ── */
-        num_layer {
-            display-name = "Num";
-            bindings = <
-                &kp ESC    &kp FSLH  &kp N7  &kp N8  &kp N9  &kp MINUS           &kp EQUAL  &kp N7  &kp N8  &kp N9  &kp MINUS  &kp BSLH
-                &kp TAB    &kp ASTRK &kp N4  &kp N5  &kp N6  &kp PLUS            &kp PLUS   &kp N4  &kp N5  &kp N6  &kp ASTRK  &kp GRAVE
-                &kp LSHFT  &kp N0    &kp N1  &kp N2  &kp N3  &kp DOT             &kp N0     &kp N1  &kp N2  &kp N3  &kp DOT    &kp FSLH
-                                             &kp N0  &kp SPACE  &kp DOT          &trans     &trans  &trans
-            >;
-        };
-
-        /* ── 4: SYM — Символы программирования и скобки ── */
+        /* ── 1: SYM — Символьный слой («Символьный слой фактический ввод», 0 Alt-кодов!) ── */
         sym_layer {
             display-name = "Sym";
             bindings = <
-                &kp TILDE  &kp EXCL   &kp AT     &kp HASH   &kp DLLR   &kp PRCNT           &kp CARET  &kp AMPS   &kp ASTRK  &kp LPAR  &kp RPAR  &kp PIPE
-                &kp GRAVE  &kp LGUI   &kp LALT   &kp LSHFT  &kp LCTRL  &kp PLUS            &kp MINUS  &kp EQUAL  &kp LBKT   &kp RBKT  &kp BSLH  &kp DQT
-                &trans     &kp UNDER  &kp LT     &kp GT     &kp LBRC   &kp RBRC            &kp UNDER  &kp PLUS   &kp LBRC   &kp RBRC  &kp QMARK &kp TILDE
-                                                 &trans     &kp SPACE  &trans              &trans     &trans     &trans
+                &kp F14      &kp F22     &kp F21       &kp RC(F13)  &kp LS(N1)  &kp LS(N5)        &kp LS(N2)       &kp RC(F17)  &kp RC(F18)  &kp F17      &kp F18      &kp RC(F19)
+                &kp RC(F14)  &kp F13     &kp LS(GRAVE) &kp LS(N6)   &kp MINUS   &kp RC(F15)       &kp KP_MULTIPLY  &kp LS(N9)   &kp LS(N0)   &kp F15      &kp F16      &kp F23
+                &trans       &kp RC(F16) &kp EQUAL     &kp KP_PLUS  &kp LS(N7)  &kp LS(MINUS)     &kp RC(F20)      &kp KP_SLASH &kp F20      &kp RC(F21)  &kp RC(F22)  &trans
+                                                       &trans       &trans      &trans            &trans           &trans       &trans
             >;
         };
 
-        /*
-         * ── 5: SYS / FN — Системный слой (зажимается правой тамб-клавишей 41) ──
-         * Все ключевые служебные функции (BT профили 0..3, BT_CLR, OUT_TOG, Studio Unlock,
-         * RGB подсветка, переключение Raw-режима, Reset и Bootloader) вынесены на ПРАВУЮ половину,
-         * чтобы ими можно было пользоваться одной правой рукой даже при выключенной левой половине!
-         * Bootloader вынесен далеко на верхние внутренние углы (05 и 06), чтобы исключить случайное нажатие.
-         */
-        sys_layer {
-            display-name = "Sys/Fn";
+        /* ── 2: NAV — Навигация и Numpad (из Foostan Corne.vil Layer 2) ── */
+        nav_layer {
+            display-name = "Nav/Num";
             bindings = <
-                &studio_unlock     &kp F1  &kp F2   &kp F3   &kp F4   &bootloader         &bootloader     &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3    &bt BT_CLR
-                &bt BT_CLR         &kp F5  &kp F6   &kp F7   &kp F8   &out OUT_TOG        &studio_unlock  &rgb_ug RGB_TOG &rgb_ug RGB_EFF &rgb_ug RGB_HUI &rgb_ug RGB_SAI &rgb_ug RGB_BRI
-                &ext_power EP_TOG  &kp F9  &kp F10  &kp F11  &kp F12  &sys_reset          &sys_reset      &out OUT_TOG    &tog L_RAW      &kp C_MUTE      &kp C_VOL_DN    &kp C_VOL_UP
-                                                    &trans   &kp C_PP &tog L_RAW          &kp C_NEXT      &rgb_ug RGB_BRD &trans
+                &none       &kp LC(Z)  &kp HOME        &kp UP       &kp PG_UP           &kp LC(C)    &kp EQUAL  &kp KP_N7           &kp KP_N8           &kp KP_N9          &kp KP_MINUS        &kp KP_SLASH
+                &kp LC(A)   &none      &kp LEFT        &kp DOWN     &kp RIGHT           &kp LC(X)    &kp BSPC   &kp KP_N4           &kp KP_N5           &kp KP_N6          &kp KP_PLUS         &kp KP_ASTERISK
+                &trans      &kp RGUI   &brm_l LALT END &kp LSHFT    &brm_l LCTRL PG_DN  &kp LC(V)    &kp SPACE  &brm_r RCTRL KP_N1  &brm_r RSHFT KP_N2  &brm_r LALT KP_N3  &brm_r RGUI KP_DOT  &trans
+                                                       &trans       &trans              &trans       &trans     &kp KP_N0           &trans
             >;
         };
 
-        /* ── 6: MOUSE — Слой Auto-Mouse (включается сам при движении трекбола! Клики под обеими руками) ── */
+        /* ── 3: FN — F1..F12, цифры, медиа и Pipe (из Foostan Corne.vil Layer 3) ── */
+        fn_layer {
+            display-name = "Fn";
+            bindings = <
+                &kp F1        &kp F2    &kp F3     &kp F4     &kp F5     &kp F6       &kp F7   &kp F8     &kp F9      &kp F10           &kp F11           &kp F12
+                &tog 2        &kp N1    &kp N2     &kp N3     &kp N4     &kp N5       &kp N6   &kp N7     &kp N8      &kp N9            &kp N0            &kp LA(PG_UP)
+                &kp LC(BSLH)  &kp RGUI  &kp LALT   &kp LSHFT  &kp LCTRL  &kp CAPS     &kp F19  &kp RCTRL  &kp C_MUTE  &kp LA(C_VOL_DN)  &kp RG(C_VOL_UP)  &kp LA(PG_DN)
+                                                   &mo 5      &trans     &mo 5        &trans   &trans     &trans
+            >;
+        };
+
+        /* ── 4: GAME — Чистый игровой слой (из Foostan Corne.vil Layer 4) ── */
+        game_layer {
+            display-name = "Game";
+            bindings = <
+                &kp N1     &kp N2     &kp N3  &kp N4  &kp N5  &kp N6      &none  &none  &none  &none  &none   &none
+                &kp TAB    &kp LSHFT  &kp Q   &kp W   &kp E   &kp R       &none  &none  &none  &none  &none   &none
+                &kp GRAVE  &kp LCTRL  &kp A   &kp S   &kp D   &kp F       &none  &none  &none  &none  &tog 4  &none
+                                              &kp RET &kp LALT &kp SPACE  &none  &none  &none
+            >;
+        };
+
+        /* ── 5: SYS — Служебный слой (Bluetooth, Bootloader, Reset, Studio Unlock) ── */
+        sys_layer {
+            display-name = "Sys";
+            bindings = <
+                &studio_unlock  &none  &none  &none  &none  &bootloader    &bootloader  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_CLR
+                &studio_unlock  &none  &none  &none  &none  &out OUT_TOG   &none        &none         &none         &none         &none         &out OUT_TOG
+                &sys_reset      &none  &none  &none  &none  &sys_reset     &sys_reset   &none         &tog 4        &kp C_MUTE    &kp C_VOL_DN  &kp C_VOL_UP
+                                              &trans &trans &trans         &trans       &trans        &trans
+            >;
+        };
+
+        /* ── 6: MOUSE — Слой Auto-Mouse (кнопки SDF и JKL, E = Scroll, R = Snipe) ── */
         mouse_layer {
             display-name = "Mouse";
             bindings = <
-                &trans  &trans       &trans     &trans     &trans     &trans               &trans        &trans     &trans     &trans     &trans          &trans
-                &trans  &mo L_SNIPE  &mkp RCLK  &mkp MCLK  &mkp LCLK  &mo L_SCROLL         &mo L_SNIPE   &mkp LCLK  &mkp MCLK  &mkp RCLK  &mo L_SCROLL    &trans
-                &trans  &trans       &trans     &mkp MB4   &mkp MB5   &trans               &trans        &mkp MB4   &mkp MB5   &trans     &trans          &trans
-                                                &mo L_SCROLL  &trans  &mkp LCLK            &mkp RCLK     &trans     &mkp MCLK
+                &trans  &trans  &trans     &mo 8      &mo 7      &trans      &trans  &trans     &trans     &trans     &trans  &trans
+                &trans  &trans  &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans      &trans  &mkp LCLK  &mkp MCLK  &mkp RCLK  &trans  &trans
+                &trans  &trans  &trans     &trans     &trans     &trans      &trans  &trans     &trans     &trans     &trans  &trans
+                                           &trans     &trans     &trans      &trans  &trans     &trans
             >;
         };
 
-        /* ── 7: SNIPE — Точное прицеливание (замедление курсора 1:3, кнопки мыши сохраняются) ── */
+        /* ── 7: SNIPE — Точное прицеливание (замедление курсора 1:3) ── */
         snipe_layer {
             display-name = "Snipe";
             bindings = <
-                &trans  &trans  &trans     &trans     &trans     &trans          &trans  &trans     &trans     &trans     &trans  &trans
-                &trans  &trans  &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans          &trans  &mkp LCLK  &mkp MCLK  &mkp RCLK  &trans  &trans
-                &trans  &trans  &trans     &mkp MB4   &mkp MB5   &trans          &trans  &mkp MB4   &mkp MB5   &trans     &trans  &trans
-                                           &trans     &trans     &mkp LCLK       &mkp RCLK  &trans  &mkp MCLK
+                &trans  &trans  &trans     &mo 8      &trans     &trans      &trans  &trans     &trans     &trans     &trans  &trans
+                &trans  &trans  &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans      &trans  &mkp LCLK  &mkp MCLK  &mkp RCLK  &trans  &trans
+                &trans  &trans  &trans     &trans     &trans     &trans      &trans  &trans     &trans     &trans     &trans  &trans
+                                           &trans     &trans     &trans      &trans  &trans     &trans
             >;
         };
 
@@ -146,24 +137,16 @@
         scroll_layer {
             display-name = "Scroll";
             bindings = <
-                &trans  &trans  &trans     &trans     &trans     &trans          &trans  &trans     &trans     &trans     &trans  &trans
-                &trans  &trans  &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans          &trans  &mkp LCLK  &mkp MCLK  &mkp RCLK  &trans  &trans
-                &trans  &trans  &trans     &mkp MB4   &mkp MB5   &trans          &trans  &mkp MB4   &mkp MB5   &trans     &trans  &trans
-                                           &trans     &trans     &mkp LCLK       &mkp RCLK  &trans  &mkp MCLK
+                &trans  &trans  &trans     &trans     &mo 7      &trans      &trans  &trans     &trans     &trans     &trans  &trans
+                &trans  &trans  &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans      &trans  &mkp LCLK  &mkp MCLK  &mkp RCLK  &trans  &trans
+                &trans  &trans  &trans     &trans     &trans     &trans      &trans  &trans     &trans     &trans     &trans  &trans
+                                           &trans     &trans     &trans      &trans  &trans     &trans
             >;
         };
 
-        /* ── Резервные пустые слои для добавления собственных слоёв в ZMK Studio без пересборки ── */
-        extra1 {
-            status = "reserved";
-        };
-
-        extra2 {
-            status = "reserved";
-        };
-
-        extra3 {
-            status = "reserved";
-        };
+        /* ── Резервные слои для ZMK Studio ── */
+        extra1 { status = "reserved"; };
+        extra2 { status = "reserved"; };
+        extra3 { status = "reserved"; };
     };
 };
