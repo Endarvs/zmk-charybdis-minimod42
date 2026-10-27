@@ -40,3 +40,18 @@
         status = "okay";
     };
 };
+
+/*
+ * Два независимых виртуальных USB CDC-ACM порта:
+ *   MI_00 (первый) = snippet_studio_rpc_usb_uart -> эксклюзивно для ZMK Studio (COM8)
+ *   MI_02 (второй) = helper_cdc_acm_uart         -> мост управления и телеметрии Charybdis Helper
+ */
+&zephyr_udc0 {
+    snippet_studio_rpc_usb_uart: snippet_studio_rpc_usb_uart {
+        compatible = "zephyr,cdc-acm-uart";
+    };
+
+    helper_cdc_acm_uart: helper_cdc_acm_uart {
+        compatible = "zephyr,cdc-acm-uart";
+    };
+};

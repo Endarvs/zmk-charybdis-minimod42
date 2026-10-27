@@ -1,26 +1,21 @@
 /*
- * Конвейер обработки трекбола Charybdis Mini MOD (ZMK Input Processors)
+ * Конвейер обработки трекбола Charybdis Mini MOD (Live Runtime ZMK Processor)
  * Подключается автоматически на центральной стороне (charybdis_right или charybdis_dongle).
  *
- * Слои (синхронизированы с config/charybdis.keymap):
- *   6 = L_MOUSE        (Auto-Mouse: автоматически включается при движении шара)
- *   7 = L_SNIPE        (Снайперский режим: замедление курсора в 3 раза для точной работы)
- *   8 = L_SCROLL       (Режим 2D-скролла: превращает вращение шара в вертикальную и горизонтальную прокрутку)
- *   9 = L_MANUAL_MOUSE (Ручной режим: курсор бегает, но слой мыши не включается автоматически)
- *  10 = L_MUTE_TB      (Полное отключение трекбола)
+ * Все режимы и коэффициенты управляются НА ЛЕТУ из приложения Charybdis Helper (порт MI_02)
+ * с энергонезависимым сохранением в NVS Flash микроконтроллера:
+ *   - Слой 6 (L_MOUSE):        Auto-Mouse с защитой от вибраций (350 мс + порог 5 пикселей) и защитой перетаскивания
+ *   - Слой 7 (L_SNIPE):        Снайперское замедление (1:2 / 1:3 / 1:4) с субпиксельным остатком
+ *   - Слой 8 (L_SCROLL):       Плавный 2D-скролл (регулируемая скорость + инверсия Natural Scroll)
+ *   - Слой 9 (L_MANUAL_MOUSE): Ручной режим (курсор активен всегда, кнопки мыши только по Nav + ~)
+ *   - Слой 10 (L_MUTE_TB):     Полная аппаратная блокировка трекбола (Trackball Mute)
+ *
+ * Полностью изолировано внутри прошивки клавиатуры — глобальные настройки мыши Windows НЕ затрагиваются!
  */
 
 #include <input/processors.dtsi>
 #include <dt-bindings/zmk/input_transform.h>
 
-/*
- * Аппаратная динамическая акселерация (встроенный input-processor-acceleration):
- * - min-factor = <400>: 0.4x скорость при медленном вращении (попиксельная точность, медленнее стандартной)
- * - max-factor = <3500>: 3.5x скорость при быстром броске (свободный перелёт через несколько мониторов)
- * - acceleration-exponent = <2>: плавная квадратичная кривая V_out ~ V_in^2
- * - track-remainders: субпиксельный учёт остатков, нулевой джиттер
- * Работает аппаратно внутри клавиатуры и НЕ затрагивает обычную мышь пользователя в Windows!
- */
 / {
     pointer_accel: pointer_accel {
         compatible = "zmk,input-processor-acceleration";
@@ -28,69 +23,14 @@
         #input-processor-cells = <0>;
         input-type = <INPUT_EV_REL>;
         track-remainders;
-        min-factor = <400>;
-        max-factor = <3500>;
-        speed-threshold = <1000>;
-        speed-max = <5000>;
+        min-factor = <450>;
+        max-factor = <4000>;
+        speed-threshold = <600>;
+        speed-max = <3200>;
         acceleration-exponent = <2>;
     };
 };
 
-/*
- * Настройка Auto-Mouse (&zip_temp_layer):
- * - require-prior-idle-ms = <350>: защита от ложного срабатывания во время быстрой печати
- *   (если после нажатия клавиши прошло меньше 350 мс, вибрация стола от печати НЕ включит слой мыши).
- * - excluded-positions: клавиши мыши, нажатие которых НЕ сбрасывает слой L_MOUSE:
- *     E (03 = Scroll), R (04 = Snipe)
- *     S (14 = RCLK), D (15 = MCLK), F (16 = LCLK)
- *     J (19 = LCLK), K (20 = MCLK), L (21 = RCLK)
- *     Тамб-кластеры 36..41 (большой палец на шаре)
- */
-&zip_temp_layer {
-    require-prior-idle-ms = <350>;
-    excluded-positions = <
-        3 4
-        14 15 16
-        19 20 21
-        36 37 38 39 40 41
-    >;
-};
-
 &trackball_listener {
-    /* Базовый конвейер: динамическая акселерация + автоматическое включение слоя L_MOUSE (6) на 800 мс */
-    input-processors = <
-        &pointer_accel
-        &zip_temp_layer 6 800
-    >;
-
-    /* Слой 9 (L_MANUAL_MOUSE): ручной режим — курсор бегает с акселерацией, но L_MOUSE НЕ включается */
-    manual_mouse: manual_mouse {
-        layers = <9>;
-        input-processors = <&pointer_accel>;
-    };
-
-    /* Слой 10 (L_MUTE_TB): полное отключение трекбола */
-    mute_trackball: mute_trackball {
-        layers = <10>;
-        input-processors = <&zip_xy_scaler 0 1>;
-    };
-
-    /* Слой 8 (L_SCROLL): плавная 2D-прокрутка трекболом (вертикальная + горизонтальная) */
-    scroller: scroller {
-        layers = <8>;
-        input-processors = <
-            &zip_xy_scaler 1 16
-            &zip_xy_to_scroll_mapper
-            &zip_scroll_transform (INPUT_TRANSFORM_Y_INVERT)
-        >;
-    };
-
-    /* Слой 7 (L_SNIPE): замедление курсора 1:3 для попиксельного прицеливания */
-    snipe: snipe {
-        layers = <7>;
-        input-processors = <
-            &zip_xy_scaler 1 3
-            &zip_temp_layer 6 800
-        >;
-    };
+    input-processors = <&pointer_accel>;
 };

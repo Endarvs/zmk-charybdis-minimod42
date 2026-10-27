@@ -23,6 +23,21 @@
     device = <&trackball>;
 };
 
+/*
+ * Два независимых виртуальных USB CDC-ACM порта при проводном подключении правой половины:
+ *   MI_00 (первый) = snippet_studio_rpc_usb_uart -> эксклюзивно для ZMK Studio
+ *   MI_02 (второй) = helper_cdc_acm_uart         -> мост управления и телеметрии Charybdis Helper
+ */
+&zephyr_udc0 {
+    snippet_studio_rpc_usb_uart: snippet_studio_rpc_usb_uart {
+        compatible = "zephyr,cdc-acm-uart";
+    };
+
+    helper_cdc_acm_uart: helper_cdc_acm_uart {
+        compatible = "zephyr,cdc-acm-uart";
+    };
+};
+
 /* Раскомментируйте блок ниже, если на правую половину распаян энкодер EC11: */
 /*
 &right_encoder {
