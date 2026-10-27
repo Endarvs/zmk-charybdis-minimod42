@@ -23,15 +23,17 @@
 #include <dt-bindings/zmk/pointing.h>
 
 /* Номера слоёв */
-#define L_BASE   0
-#define L_SYM    1
-#define L_NAV    2
-#define L_FN     3
-#define L_GAME   4
-#define L_SYS    5
-#define L_MOUSE  6
-#define L_SNIPE  7
-#define L_SCROLL 8
+#define L_BASE         0
+#define L_SYM          1
+#define L_NAV          2
+#define L_FN           3
+#define L_GAME         4
+#define L_SYS          5
+#define L_MOUSE        6
+#define L_SNIPE        7
+#define L_SCROLL       8
+#define L_MANUAL_MOUSE 9
+#define L_MUTE_TB      10
 
 #include "keymap_features/behaviors.dtsi"
 #include "keymap_features/combos.dtsi"
@@ -67,11 +69,11 @@
             >;
         };
 
-        /* ── 2: NAV — Навигация и Numpad (из Foostan Corne.vil Layer 2) ── */
+        /* ── 2: NAV — Навигация и Numpad (Top-Left = &mo 6 для ручного режима мыши!) ── */
         nav_layer {
             display-name = "Nav/Num";
             bindings = <
-                &none       &kp LC(Z)  &kp HOME        &kp UP       &kp PG_UP           &kp LC(C)    &kp EQUAL  &kp KP_N7           &kp KP_N8           &kp KP_N9          &kp KP_MINUS        &kp KP_SLASH
+                &mo 6       &kp LC(Z)  &kp HOME        &kp UP       &kp PG_UP           &kp LC(C)    &kp EQUAL  &kp KP_N7           &kp KP_N8           &kp KP_N9          &kp KP_MINUS        &kp KP_SLASH
                 &kp LC(A)   &none      &kp LEFT        &kp DOWN     &kp RIGHT           &kp LC(X)    &kp BSPC   &kp KP_N4           &kp KP_N5           &kp KP_N6          &kp KP_PLUS         &kp KP_ASTERISK
                 &trans      &kp RGUI   &brm_l LALT END &kp LSHFT    &brm_l LCTRL PG_DN  &kp LC(V)    &kp SPACE  &brm_r RCTRL KP_N1  &brm_r RSHFT KP_N2  &brm_r LALT KP_N3  &brm_r RGUI KP_DOT  &trans
                                                        &trans       &trans              &trans       &trans     &kp KP_N0           &trans
@@ -104,7 +106,7 @@
         sys_layer {
             display-name = "Sys";
             bindings = <
-                &studio_unlock  &none  &none  &none  &none  &bootloader    &bootloader  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_CLR
+                &studio_unlock  &tog 9 &tog 10 &none  &none  &bootloader    &bootloader  &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_CLR
                 &studio_unlock  &none  &none  &none  &none  &out OUT_TOG   &none        &none         &none         &none         &none         &out OUT_TOG
                 &sys_reset      &none  &none  &none  &none  &sys_reset     &sys_reset   &none         &tog 4        &kp C_MUTE    &kp C_VOL_DN  &kp C_VOL_UP
                                               &trans &trans &trans         &trans       &trans        &trans
@@ -144,9 +146,29 @@
             >;
         };
 
+        /* ── 9: MANUAL_MOUSE — Ручной режим мыши (Auto-Mouse выключен) ── */
+        manual_mouse_layer {
+            display-name = "Manual";
+            bindings = <
+                &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans
+                &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans
+                &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans
+                                        &trans  &trans  &trans      &trans  &trans  &trans
+            >;
+        };
+
+        /* ── 10: MUTE_TB — Трекбол полностью выключен ── */
+        mute_trackball_layer {
+            display-name = "MuteTB";
+            bindings = <
+                &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans
+                &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans
+                &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans  &trans
+                                        &trans  &trans  &trans      &trans  &trans  &trans
+            >;
+        };
+
         /* ── Резервные слои для ZMK Studio ── */
         extra1 { status = "reserved"; };
-        extra2 { status = "reserved"; };
-        extra3 { status = "reserved"; };
     };
 };

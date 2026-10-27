@@ -3,13 +3,34 @@
  * Подключается автоматически на центральной стороне (charybdis_right или charybdis_dongle).
  *
  * Слои (синхронизированы с config/charybdis.keymap):
- *   6 = L_MOUSE  (Auto-Mouse: автоматически включается при движении шара)
- *   7 = L_SNIPE  (Снайперский режим: замедление курсора в 3 раза для точной работы)
- *   8 = L_SCROLL (Режим 2D-скролла: превращает вращение шара в вертикальную и горизонтальную прокрутку)
+ *   6 = L_MOUSE        (Auto-Mouse: автоматически включается при движении шара)
+ *   7 = L_SNIPE        (Снайперский режим: замедление курсора в 3 раза для точной работы)
+ *   8 = L_SCROLL       (Режим 2D-скролла: превращает вращение шара в вертикальную и горизонтальную прокрутку)
+ *   9 = L_MANUAL_MOUSE (Ручной режим: курсор бегает, но слой мыши не включается автоматически)
+ *  10 = L_MUTE_TB      (Полное отключение трекбола)
  */
 
 #include <input/processors.dtsi>
 #include <dt-bindings/zmk/input_transform.h>
+#include <behaviors/input_gestures_accel.dtsi>
+
+/*
+ * Аппаратная динамическая акселерация (oleksandrmaslov/zmk-pointing-acceleration):
+ * - min-factor = <400>: 0.4x скорость при медленном вращении (попиксельная точность, медленнее стандартной)
+ * - max-factor = <3500>: 3.5x скорость при быстром броске (свободный перелёт через несколько мониторов)
+ * - acceleration-exponent = <2>: плавная квадратичная кривая V_out ~ V_in^2
+ * - track-remainders: субпиксельный учёт остатков, нулевой джиттер
+ * Работает аппаратно внутри клавиатуры и НЕ затрагивает обычную мышь пользователя в Windows!
+ */
+&pointer_accel {
+    input-type = <INPUT_EV_REL>;
+    track-remainders;
+    min-factor = <400>;
+    max-factor = <3500>;
+    speed-threshold = <1000>;
+    speed-max = <5000>;
+    acceleration-exponent = <2>;
+};
 
 /*
  * Настройка Auto-Mouse (&zip_temp_layer):
@@ -32,11 +53,23 @@
 };
 
 &trackball_listener {
-    /* Аппаратный множитель скорости 2x + автоматическое включение слоя L_MOUSE (6) на 800 мс */
+    /* Базовый конвейер: динамическая акселерация + автоматическое включение слоя L_MOUSE (6) на 800 мс */
     input-processors = <
-        &zip_xy_scaler 2 1
+        &pointer_accel
         &zip_temp_layer 6 800
     >;
+
+    /* Слой 9 (L_MANUAL_MOUSE): ручной режим — курсор бегает с акселерацией, но L_MOUSE НЕ включается */
+    manual_mouse: manual_mouse {
+        layers = <9>;
+        input-processors = <&pointer_accel>;
+    };
+
+    /* Слой 10 (L_MUTE_TB): полное отключение трекбола */
+    mute_trackball: mute_trackball {
+        layers = <10>;
+        input-processors = <&zip_xy_scaler 0 1>;
+    };
 
     /* Слой 8 (L_SCROLL): плавная 2D-прокрутка трекболом (вертикальная + горизонтальная) */
     scroller: scroller {
