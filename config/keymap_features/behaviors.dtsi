@@ -22,9 +22,8 @@
     behaviors {
         /*
          * Левые BRM (GUI, ALT, SHIFT, CTRL): Bilateral Combinations
-         * Срабатывают как модификатор только при удержании и аккорде с правой рукой.
-         * Без hold-while-undecided, чтобы при обычном наборе букв (например, русской "м" на V)
-         * в Windows не проскакивал холостой Ctrl, сбивающий Caps Word в AHK.
+         * Срабатывают как модификатор ТОЛЬКО при аккорде с клавишами противоположной руки (KEYS_R) или тамбами.
+         * Нажатие любой клавиши на той же руке (KEYS_L) немедленно форсирует обычный ввод буквы (TAP).
          */
         brm_l: bottom_row_mod_left {
             compatible = "zmk,behavior-hold-tap";
@@ -35,7 +34,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
-            hold-trigger-on-release;
         };
 
         /* Правые BRM (CTRL, SHIFT, ALT, GUI): Bilateral Combinations */
@@ -48,7 +46,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
-            hold-trigger-on-release;
         };
 
         /* Псевдонимы для совместимости */
@@ -61,7 +58,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
-            hold-trigger-on-release;
         };
 
         brm_l_ctl: brm_left_ctrl {
@@ -73,7 +69,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
-            hold-trigger-on-release;
         };
 
         brm_r_ctl: brm_right_ctrl {
@@ -85,7 +80,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
-            hold-trigger-on-release;
         };
 
         brm_r_sft: brm_right_shift {
@@ -97,7 +91,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
-            hold-trigger-on-release;
         };
 
         /* Поведение для слоя Fn: удержание = модификатор, тап = ничего */
@@ -119,7 +112,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
-            hold-trigger-on-release;
         };
 
         hmr: home_row_mod_right {
@@ -131,7 +123,6 @@
             require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
-            hold-trigger-on-release;
         };
 
         /* Быстрый Layer-Tap */
