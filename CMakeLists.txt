@@ -7,4 +7,4 @@ target_sources_ifdef(CONFIG_ZMK_POINTING app PRIVATE src/input_processor_accel.c
 # Второй виртуальный USB CDC-ACM порт (MI_02) + NVS-память и опрос батарей половин для Charybdis Helper
 # (активируется автоматически только при наличии узла helper_cdc_acm_uart в overlay)
 target_sources(app PRIVATE src/helper_bridge.c)
-target_include_directories(app PRIVATE ${APPLICATION_SOURCE_DIR}/include)
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${APPLICATION_SOURCE_DIR}/include)

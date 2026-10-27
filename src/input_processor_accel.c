@@ -13,6 +13,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
+#include <zephyr/sys/util.h>
 #include <drivers/input_processor.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 #include <stdlib.h>
