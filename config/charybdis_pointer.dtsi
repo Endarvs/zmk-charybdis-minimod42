@@ -23,8 +23,8 @@
         #input-processor-cells = <0>;
         input-type = <INPUT_EV_REL>;
         track-remainders;
-        min-factor = <450>;
-        max-factor = <4000>;
+        min-factor = <460>;
+        max-factor = <5800>;
         speed-threshold = <600>;
         speed-max = <3200>;
         acceleration-exponent = <2>;

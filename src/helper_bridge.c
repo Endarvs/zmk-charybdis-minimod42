@@ -9,6 +9,8 @@
  *   - Non-volatile Flash persistence via Zephyr Settings ("charybdis/rt")
  *   - Safe post-connect BLE GATT battery polling (BT_UUID_BAS_BATTERY_LEVEL) for Left & Right halves
  *     without touching ZMK's internal sub_discover_params
+ *   - Automatic discovery of active BLE central connections via bt_conn_foreach
+ *   - Deterministic Left vs Right peripheral resolution via position state events
  */
 
 #include <zephyr/devicetree.h>
@@ -29,6 +31,8 @@
 #include <string.h>
 
 #include <zmk/battery.h>
+#include <zmk/event_manager.h>
+#include <zmk/events/position_state_changed.h>
 #include "charybdis_runtime.h"
 
 #define HELPER_UART_NODE DT_NODELABEL(helper_cdc_acm_uart)
@@ -47,11 +51,10 @@ static size_t cmd_line_len = 0;
 struct half_batt_slot {
     struct bt_conn *conn;
     int64_t connected_ms;
+    int64_t read_start_ms;
     int8_t  side;       /* -1 = unknown, 0 = Left, 1 = Right */
     int16_t level;      /* -1 = unknown, 0..100 = BAS % */
-    bool    cpf_probed;
     bool    read_busy;
-    struct bt_gatt_read_params cpf_params;
     struct bt_gatt_read_params bas_params;
 };
 
@@ -60,9 +63,8 @@ static struct k_work_delayable batt_poll_work;
 static struct k_work send_state_work;
 static struct k_work rx_process_work;
 
-/* File-scope static storage for GATT UUIDs (must outlive async bt_gatt_read) */
-static const struct bt_uuid_16 uuid_gatt_cpf = BT_UUID_INIT_16(BT_UUID_GATT_CPF_VAL);
-static const struct bt_uuid_16 uuid_bas_lvl  = BT_UUID_INIT_16(BT_UUID_BAS_BATTERY_LEVEL_VAL);
+/* File-scope static storage for GATT UUID (must outlive async bt_gatt_read) */
+static const struct bt_uuid_16 uuid_bas_lvl = BT_UUID_INIT_16(BT_UUID_BAS_BATTERY_LEVEL_VAL);
 
 static void enqueue_tx_str(const char *s) {
     if (!device_is_ready(helper_uart) || s == NULL) {
@@ -84,6 +86,61 @@ void charybdis_helper_notify_state_changed(void) {
     }
 }
 
+static void add_active_conn(struct bt_conn *conn, void *data) {
+    ARG_UNUSED(data);
+    struct bt_conn_info info;
+    if (bt_conn_get_info(conn, &info) != 0) {
+        return;
+    }
+    if (info.state != BT_CONN_STATE_CONNECTED || info.role != BT_CONN_ROLE_CENTRAL) {
+        return;
+    }
+
+    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+        if (batt_slots[i].conn == conn) {
+            return; /* already tracked */
+        }
+    }
+
+    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+        if (batt_slots[i].conn == NULL) {
+            batt_slots[i].conn = bt_conn_ref(conn);
+            batt_slots[i].connected_ms = k_uptime_get();
+            batt_slots[i].read_start_ms = 0;
+            batt_slots[i].level = -1;
+            batt_slots[i].read_busy = false;
+#if defined(CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS) && (CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS == 1)
+            batt_slots[i].side = 0; /* Mode A: Only 1 peripheral = Left half */
+#else
+            batt_slots[i].side = -1;
+#endif
+            charybdis_helper_notify_state_changed();
+            return;
+        }
+    }
+}
+
+static void sync_connections(void) {
+    /* 1. Purge disconnected or dead connections */
+    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+        if (batt_slots[i].conn != NULL) {
+            struct bt_conn_info info;
+            if (bt_conn_get_info(batt_slots[i].conn, &info) != 0 ||
+                info.state != BT_CONN_STATE_CONNECTED) {
+                bt_conn_unref(batt_slots[i].conn);
+                batt_slots[i].conn = NULL;
+                batt_slots[i].side = -1;
+                batt_slots[i].level = -1;
+                batt_slots[i].read_busy = false;
+                batt_slots[i].read_start_ms = 0;
+            }
+        }
+    }
+
+    /* 2. Enumerate active LE central connections (catches boot & reconnection) */
+    bt_conn_foreach(BT_CONN_TYPE_LE, add_active_conn, NULL);
+}
+
 static void get_split_battery_state(int *l_conn, int *l_batt, int *r_conn, int *r_batt) {
     *l_conn = 0;
     *l_batt = -1;
@@ -94,8 +151,18 @@ static void get_split_battery_state(int *l_conn, int *l_batt, int *r_conn, int *
     /* Mode A: charybdis_right is Central (local ADC = Right half, 1 BLE peripheral = Left half) */
     *r_conn = 1;
     *r_batt = (int)zmk_battery_state_of_charge();
+
+    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+        if (batt_slots[i].conn != NULL) {
+            *l_conn = 1;
+            *l_batt = batt_slots[i].level;
+            break;
+        }
+    }
+    return;
 #endif
 
+    /* Mode B: Central Dongle (2 BLE peripherals: Left + Right) */
     for (int i = 0; i < MAX_BATT_SLOTS; i++) {
         if (batt_slots[i].conn == NULL) {
             continue;
@@ -109,15 +176,33 @@ static void get_split_battery_state(int *l_conn, int *l_batt, int *r_conn, int *
         }
     }
 
-    /* Fallback if 2 peripherals connected and one already identified as Right/Left */
-    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
-        if (batt_slots[i].conn != NULL && batt_slots[i].side == -1) {
-            if (*r_conn && !*l_conn) {
+    /* Fallback if side is not yet determined by key events:
+       If both are connected, map slot 0 -> Left, slot 1 -> Right.
+       If only one is connected, map to Left if r_conn==0 else Right.
+     */
+    if (!*l_conn && !*r_conn) {
+        if (batt_slots[0].conn != NULL) {
+            *l_conn = 1;
+            *l_batt = batt_slots[0].level;
+        }
+        if (batt_slots[1].conn != NULL) {
+            *r_conn = 1;
+            *r_batt = batt_slots[1].level;
+        }
+    } else if (*r_conn && !*l_conn) {
+        for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+            if (batt_slots[i].conn != NULL && batt_slots[i].side != 1) {
                 *l_conn = 1;
                 *l_batt = batt_slots[i].level;
-            } else if (*l_conn && !*r_conn) {
+                break;
+            }
+        }
+    } else if (*l_conn && !*r_conn) {
+        for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+            if (batt_slots[i].conn != NULL && batt_slots[i].side != 0) {
                 *r_conn = 1;
                 *r_batt = batt_slots[i].level;
+                break;
             }
         }
     }
@@ -153,16 +238,7 @@ static void send_state_work_handler(struct k_work *work) {
     }
 }
 
-/* ── BLE GATT Callbacks (CPF Side Identification + BAS Battery Level) ── */
-
-static struct half_batt_slot *slot_for_cpf_params(struct bt_gatt_read_params *p) {
-    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
-        if (&batt_slots[i].cpf_params == p) {
-            return &batt_slots[i];
-        }
-    }
-    return NULL;
-}
+/* ── BLE GATT Callback (BAS Battery Level 0x2A19) ── */
 
 static struct half_batt_slot *slot_for_bas_params(struct bt_gatt_read_params *p) {
     for (int i = 0; i < MAX_BATT_SLOTS; i++) {
@@ -171,28 +247,6 @@ static struct half_batt_slot *slot_for_bas_params(struct bt_gatt_read_params *p)
         }
     }
     return NULL;
-}
-
-static uint8_t cpf_read_cb(struct bt_conn *conn, uint8_t err,
-                           struct bt_gatt_read_params *params,
-                           const void *data, uint16_t length) {
-    ARG_UNUSED(conn);
-    struct half_batt_slot *slot = slot_for_cpf_params(params);
-    if (slot == NULL || slot->conn == NULL) {
-        if (slot) slot->read_busy = false;
-        return BT_GATT_ITER_STOP;
-    }
-
-    if (err == 0 && data != NULL && length >= 1) {
-        /* Only charybdis_right_dongle exposes BT_UUID_GATT_CPF on trackball_split@1 */
-        slot->side = 1;
-    } else if (slot->side == -1) {
-        slot->side = 0;
-    }
-
-    slot->read_busy = false;
-    k_work_reschedule(&batt_poll_work, K_MSEC(150));
-    return BT_GATT_ITER_STOP;
 }
 
 static uint8_t bas_read_cb(struct bt_conn *conn, uint8_t err,
@@ -224,37 +278,31 @@ static void batt_poll_work_handler(struct k_work *work) {
     const int64_t now = k_uptime_get();
     bool need_soon = false;
 
+    sync_connections();
+
     for (int i = 0; i < MAX_BATT_SLOTS; i++) {
         struct half_batt_slot *slot = &batt_slots[i];
-        if (slot->conn == NULL || slot->read_busy) {
+        if (slot->conn == NULL) {
             continue;
         }
 
-        /* Wait 5s after connection so ZMK's own split service discovery completes undisturbed */
-        if ((now - slot->connected_ms) < 5000) {
+        /* Timeout guard: clear read_busy if stuck > 5 seconds */
+        if (slot->read_busy) {
+            if ((now - slot->read_start_ms) > 5000) {
+                slot->read_busy = false;
+            } else {
+                continue;
+            }
+        }
+
+        /* Give 3 seconds after connection before issuing GATT read */
+        if ((now - slot->connected_ms) < 3000) {
             need_soon = true;
             continue;
         }
 
-        if (slot->side == -1 && !slot->cpf_probed) {
-            slot->cpf_probed = true;
-            slot->read_busy = true;
-            memset(&slot->cpf_params, 0, sizeof(slot->cpf_params));
-            slot->cpf_params.func = cpf_read_cb;
-            slot->cpf_params.handle_count = 0;
-            slot->cpf_params.by_uuid.start_handle = 0x0001;
-            slot->cpf_params.by_uuid.end_handle = 0xffff;
-            slot->cpf_params.by_uuid.uuid = &uuid_gatt_cpf.uuid;
-
-            if (bt_gatt_read(slot->conn, &slot->cpf_params) != 0) {
-                slot->side = 0;
-                slot->read_busy = false;
-                need_soon = true;
-            }
-            continue;
-        }
-
         slot->read_busy = true;
+        slot->read_start_ms = now;
         memset(&slot->bas_params, 0, sizeof(slot->bas_params));
         slot->bas_params.func = bas_read_cb;
         slot->bas_params.handle_count = 0;
@@ -274,35 +322,8 @@ static void helper_bt_connected(struct bt_conn *conn, uint8_t conn_err) {
     if (conn_err) {
         return;
     }
-    struct bt_conn_info info;
-    if (bt_conn_get_info(conn, &info) != 0 || info.role != BT_CONN_ROLE_CENTRAL) {
-        return;
-    }
-
-    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
-        if (batt_slots[i].conn == conn) {
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
-        if (batt_slots[i].conn == NULL) {
-            batt_slots[i].conn = bt_conn_ref(conn);
-            batt_slots[i].connected_ms = k_uptime_get();
-            batt_slots[i].level = -1;
-            batt_slots[i].read_busy = false;
-#if defined(CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS) && (CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS == 1)
-            batt_slots[i].side = 0; /* Only 1 peripheral = Left half */
-            batt_slots[i].cpf_probed = true;
-#else
-            batt_slots[i].side = -1;
-            batt_slots[i].cpf_probed = false;
-#endif
-            k_work_reschedule(&batt_poll_work, K_MSEC(5200));
-            charybdis_helper_notify_state_changed();
-            return;
-        }
-    }
+    add_active_conn(conn, NULL);
+    k_work_reschedule(&batt_poll_work, K_MSEC(3200));
 }
 
 static void helper_bt_disconnected(struct bt_conn *conn, uint8_t reason) {
@@ -313,8 +334,8 @@ static void helper_bt_disconnected(struct bt_conn *conn, uint8_t reason) {
             batt_slots[i].conn = NULL;
             batt_slots[i].side = -1;
             batt_slots[i].level = -1;
-            batt_slots[i].cpf_probed = false;
             batt_slots[i].read_busy = false;
+            batt_slots[i].read_start_ms = 0;
             charybdis_helper_notify_state_changed();
             return;
         }
@@ -325,6 +346,44 @@ static struct bt_conn_cb helper_conn_callbacks = {
     .connected = helper_bt_connected,
     .disconnected = helper_bt_disconnected,
 };
+
+/* ── Key Position Listener (Mode B: Dongle Left vs Right Identification) ── */
+
+static inline bool is_left_key_position(uint32_t pos) {
+    if (pos < 6) return true;
+    if (pos >= 12 && pos < 18) return true;
+    if (pos >= 24 && pos < 30) return true;
+    if (pos >= 36 && pos < 39) return true;
+    return false;
+}
+
+static int helper_pos_listener(const zmk_event_t *eh) {
+    const struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+    if (ev == NULL || !ev->state) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+#if !defined(CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS) || (CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS != 1)
+    uint8_t src = ev->source;
+    if (src < MAX_BATT_SLOTS && batt_slots[src].conn != NULL) {
+        bool is_left = is_left_key_position(ev->position);
+        int8_t new_side = is_left ? 0 : 1;
+        if (batt_slots[src].side != new_side) {
+            batt_slots[src].side = new_side;
+            int other = 1 - src;
+            if (other >= 0 && other < MAX_BATT_SLOTS && batt_slots[other].conn != NULL) {
+                batt_slots[other].side = is_left ? 1 : 0;
+            }
+            charybdis_helper_notify_state_changed();
+        }
+    }
+#endif
+
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+ZMK_LISTENER(helper_pos_tracker, helper_pos_listener);
+ZMK_SUBSCRIPTION(helper_pos_tracker, zmk_position_state_changed);
 
 /* ── NVS Flash Persistence ("charybdis/rt") ── */
 #if IS_ENABLED(CONFIG_SETTINGS)
@@ -387,6 +446,10 @@ static void handle_command_line(const char *line) {
     }
 
     if (strncmp(line, "REFRESH", 7) == 0) {
+        sync_connections();
+        for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+            batt_slots[i].read_busy = false;
+        }
         k_work_reschedule(&batt_poll_work, K_NO_WAIT);
         k_work_submit(&send_state_work);
         return;
@@ -501,8 +564,8 @@ static int helper_bridge_init(void) {
         batt_slots[i].conn = NULL;
         batt_slots[i].side = -1;
         batt_slots[i].level = -1;
-        batt_slots[i].cpf_probed = false;
         batt_slots[i].read_busy = false;
+        batt_slots[i].read_start_ms = 0;
     }
 
     k_work_init(&send_state_work, send_state_work_handler);
@@ -510,6 +573,9 @@ static int helper_bridge_init(void) {
     k_work_init_delayable(&batt_poll_work, batt_poll_work_handler);
 
     bt_conn_cb_register(&helper_conn_callbacks);
+
+    sync_connections();
+    k_work_reschedule(&batt_poll_work, K_MSEC(3500));
 
     if (!device_is_ready(helper_uart)) {
         return 0;
