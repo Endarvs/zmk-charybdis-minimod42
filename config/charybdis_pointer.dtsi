@@ -12,24 +12,28 @@
 
 #include <input/processors.dtsi>
 #include <dt-bindings/zmk/input_transform.h>
-#include <behaviors/input_gestures_accel.dtsi>
 
 /*
- * Аппаратная динамическая акселерация (oleksandrmaslov/zmk-pointing-acceleration):
+ * Аппаратная динамическая акселерация (встроенный input-processor-acceleration):
  * - min-factor = <400>: 0.4x скорость при медленном вращении (попиксельная точность, медленнее стандартной)
  * - max-factor = <3500>: 3.5x скорость при быстром броске (свободный перелёт через несколько мониторов)
  * - acceleration-exponent = <2>: плавная квадратичная кривая V_out ~ V_in^2
  * - track-remainders: субпиксельный учёт остатков, нулевой джиттер
  * Работает аппаратно внутри клавиатуры и НЕ затрагивает обычную мышь пользователя в Windows!
  */
-&pointer_accel {
-    input-type = <INPUT_EV_REL>;
-    track-remainders;
-    min-factor = <400>;
-    max-factor = <3500>;
-    speed-threshold = <1000>;
-    speed-max = <5000>;
-    acceleration-exponent = <2>;
+/ {
+    pointer_accel: pointer_accel {
+        compatible = "zmk,input-processor-acceleration";
+        status = "okay";
+        #input-processor-cells = <0>;
+        input-type = <INPUT_EV_REL>;
+        track-remainders;
+        min-factor = <400>;
+        max-factor = <3500>;
+        speed-threshold = <1000>;
+        speed-max = <5000>;
+        acceleration-exponent = <2>;
+    };
 };
 
 /*
