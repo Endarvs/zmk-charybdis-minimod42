@@ -1,5 +1,6 @@
 /*
- * Позиционные Bottom-Row Mods (BRM) с поддержкой Bilateral Combinations
+ * Позиционные Bottom-Row Mods (BRM) с поддержкой Bilateral Combinations,
+ * hold-trigger-on-release для одновременных аккордов модификаторов одной руки,
  * и кастомные поведения для 42 клавиш (3x6 + 3L/3R Thumbs)
  *
  * Схема индексов клавиш (0..41):
@@ -21,29 +22,33 @@
 / {
     behaviors {
         /*
-         * Левые BRM (GUI, ALT, SHIFT, CTRL): Bilateral Combinations
-         * Срабатывают как модификатор ТОЛЬКО при аккорде с клавишами противоположной руки (KEYS_R) или тамбами.
-         * Нажатие любой клавиши на той же руке (KEYS_L) немедленно форсирует обычный ввод буквы (TAP).
+         * Левые BRM (GUI, ALT, SHIFT, CTRL): Bilateral Combinations + hold-trigger-on-release
+         * - Удержание >= 175 мс: гарантированный модификатор.
+         * - Аккорд с противоположной рукой (KEYS_R) или тамбами: немедленная активация модификатора.
+         * - hold-trigger-on-release: позволяет зажимать несколько модификаторов на одной руке
+         *   (например, Ctrl + Shift слева для комбинаций с Esc/другой рукой).
          */
         brm_l: bottom_row_mod_left {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
         };
 
-        /* Правые BRM (CTRL, SHIFT, ALT, GUI): Bilateral Combinations */
+        /* Правые BRM (CTRL, SHIFT, ALT, GUI): Bilateral Combinations + hold-trigger-on-release */
         brm_r: bottom_row_mod_right {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
         };
@@ -53,9 +58,10 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
         };
@@ -64,9 +70,10 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
         };
@@ -75,9 +82,10 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
         };
@@ -86,9 +94,10 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
         };
@@ -98,7 +107,7 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "hold-preferred";
-            tapping-term-ms = <185>;
+            tapping-term-ms = <175>;
             bindings = <&kp>, <&none>;
         };
 
@@ -107,9 +116,10 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_R THUMBS>;
         };
@@ -118,9 +128,10 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             require-prior-idle-ms = <125>;
+            hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
             hold-trigger-key-positions = <KEYS_L THUMBS>;
         };
@@ -130,8 +141,8 @@
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
             flavor = "balanced";
-            tapping-term-ms = <185>;
-            quick-tap-ms = <175>;
+            tapping-term-ms = <175>;
+            quick-tap-ms = <150>;
             bindings = <&mo>, <&kp>;
         };
     };
