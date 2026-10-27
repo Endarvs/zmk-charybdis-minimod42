@@ -36,6 +36,7 @@
 #define L_MUTE_TB      10
 
 #include "keymap_features/behaviors.dtsi"
+#include "keymap_features/macros.dtsi"
 #include "keymap_features/combos.dtsi"
 
 /* Подключаем конвейер трекбола (Auto-Mouse + 2D Scroll + Snipe) только на Central */
@@ -86,7 +87,7 @@
             bindings = <
                 &kp F1        &kp F2          &kp F3          &kp F4           &kp F5          &kp F6       &kp F7   &kp F8            &kp F9      &kp F10                 &kp F11                 &kp F12
                 &tog 2        &kp N1          &kp N2          &kp N3           &kp N4          &kp N5       &kp N6   &kp N7            &kp N8      &kp N9                  &kp N0                  &kp LA(PG_UP)
-                &kp LC(BSLH)  &ht_none RGUI 0 &ht_none LALT 0 &ht_none LSHFT 0 &ht_none LCTRL 0 &kp CAPS    &kp F19  &ht_none RCTRL 0  &kp C_MUTE  &brm_r LALT C_VOL_DN    &brm_r RGUI C_VOL_UP    &kp LA(PG_DN)
+                &kp LC(BSLH)  &ht_none RGUI 0 &ht_none LALT 0 &ht_none LSHFT 0 &ht_none LCTRL 0 &kp CAPS    &kp F19  &ht_none RCTRL 0  &brm_r RSHFT C_MUTE  &brm_r LALT C_VOL_DN    &brm_r RGUI C_VOL_UP    &kp LA(PG_DN)
                                                               &mo 5            &trans          &mo 5        &trans   &trans            &trans
             >;
         };

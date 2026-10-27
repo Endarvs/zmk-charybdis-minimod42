@@ -177,17 +177,16 @@ static void get_split_battery_state(int *l_conn, int *l_batt, int *r_conn, int *
     }
 
     /* Fallback if side is not yet determined by key events:
-       If both are connected, map slot 0 -> Left, slot 1 -> Right.
-       If only one is connected, map to Left if r_conn==0 else Right.
+       On Charybdis Dongle boot, slot 0 is Right (PMW3610 initiates connection first), slot 1 is Left.
      */
     if (!*l_conn && !*r_conn) {
         if (batt_slots[0].conn != NULL) {
-            *l_conn = 1;
-            *l_batt = batt_slots[0].level;
+            *r_conn = 1;
+            *r_batt = batt_slots[0].level;
         }
         if (batt_slots[1].conn != NULL) {
-            *r_conn = 1;
-            *r_batt = batt_slots[1].level;
+            *l_conn = 1;
+            *l_batt = batt_slots[1].level;
         }
     } else if (*r_conn && !*l_conn) {
         for (int i = 0; i < MAX_BATT_SLOTS; i++) {
@@ -349,6 +348,10 @@ static struct bt_conn_cb helper_conn_callbacks = {
 
 /* ── Key Position Listener (Mode B: Dongle Left vs Right Identification) ── */
 
+#if !defined(CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS) || (CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS != 1)
+extern int peripheral_slot_index_for_conn(struct bt_conn *conn);
+#endif
+
 static inline bool is_left_key_position(uint32_t pos) {
     if (pos < 6) return true;
     if (pos >= 12 && pos < 18) return true;
@@ -364,17 +367,19 @@ static int helper_pos_listener(const zmk_event_t *eh) {
     }
 
 #if !defined(CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS) || (CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS != 1)
-    uint8_t src = ev->source;
-    if (src < MAX_BATT_SLOTS && batt_slots[src].conn != NULL) {
-        bool is_left = is_left_key_position(ev->position);
-        int8_t new_side = is_left ? 0 : 1;
-        if (batt_slots[src].side != new_side) {
-            batt_slots[src].side = new_side;
-            int other = 1 - src;
-            if (other >= 0 && other < MAX_BATT_SLOTS && batt_slots[other].conn != NULL) {
-                batt_slots[other].side = is_left ? 1 : 0;
+    bool is_left = is_left_key_position(ev->position);
+    for (int i = 0; i < MAX_BATT_SLOTS; i++) {
+        if (batt_slots[i].conn != NULL && peripheral_slot_index_for_conn(batt_slots[i].conn) == (int)ev->source) {
+            int8_t new_side = is_left ? 0 : 1;
+            if (batt_slots[i].side != new_side) {
+                batt_slots[i].side = new_side;
+                int other = 1 - i;
+                if (other >= 0 && other < MAX_BATT_SLOTS && batt_slots[other].conn != NULL) {
+                    batt_slots[other].side = is_left ? 1 : 0;
+                }
+                charybdis_helper_notify_state_changed();
             }
-            charybdis_helper_notify_state_changed();
+            break;
         }
     }
 #endif

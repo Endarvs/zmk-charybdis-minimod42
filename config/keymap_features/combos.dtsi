@@ -28,19 +28,19 @@
             layers = <0 1 2 3>;
         };
 
-        /* U + I (7 + 8) -> LSA(2) (EN) */
+        /* U + I (7 + 8) -> Alt+Shift+2 (Английский EN в Windows) */
         combo_lsa2_en {
             timeout-ms = <50>;
             key-positions = <7 8>;
-            bindings = <&kp LA(LS(N2))>;
+            bindings = <&lang_en>;
             layers = <0 1 2 3>;
         };
 
-        /* J + K (19 + 20) -> LSA(3) (RU) */
+        /* J + K (19 + 20) -> Alt+Shift+3 (Русский RU в Windows) */
         combo_lsa3_ru {
             timeout-ms = <50>;
             key-positions = <19 20>;
-            bindings = <&kp LA(LS(N3))>;
+            bindings = <&lang_ru>;
             layers = <0 1 2 3>;
         };
     };

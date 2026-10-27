@@ -39,6 +39,32 @@
                 ;
         };
 
+        /* Точный выбор Английского языка (Alt слева + Shift + 2) для Windows */
+        lang_en: lang_en {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <15>;
+            tap-ms = <35>;
+            bindings
+                = <&macro_press &kp LALT &kp LSHFT>
+                , <&macro_tap &kp N2>
+                , <&macro_release &kp LALT &kp LSHFT>
+                ;
+        };
+
+        /* Точный выбор Русского языка (Alt слева + Shift + 3) для Windows */
+        lang_ru: lang_ru {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <15>;
+            tap-ms = <35>;
+            bindings
+                = <&macro_press &kp LALT &kp LSHFT>
+                , <&macro_tap &kp N3>
+                , <&macro_release &kp LALT &kp LSHFT>
+                ;
+        };
+
         /*
          * Восстановленные и исправленные макросы индикации слоёв из заводского UF2
          * (в заводской прошивке в To2_macro была опечатка &to 1 вместо &to 2 — исправлено):
