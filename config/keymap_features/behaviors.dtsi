@@ -21,8 +21,10 @@
 / {
     behaviors {
         /*
-         * Левые BRM (GUI, ALT): срабатывают только с клавишами противоположной руки,
-         * исключая паразитные аккорды при наборе одной рукой.
+         * Левые BRM (GUI, ALT, SHIFT, CTRL): Bilateral Combinations
+         * Срабатывают как модификатор только при удержании и аккорде с правой рукой.
+         * Без hold-while-undecided, чтобы при обычном наборе букв (например, русской "м" на V)
+         * в Windows не проскакивал холостой Ctrl, сбивающий Caps Word в AHK.
          */
         brm_l: bottom_row_mod_left {
             compatible = "zmk,behavior-hold-tap";
@@ -36,63 +38,7 @@
             hold-trigger-on-release;
         };
 
-        /* Левый Shift: Bilateral + hold-while-undecided для мгновенных кликов Shift+Click трекболом */
-        brm_l_sft: bottom_row_mod_left_shift {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <200>;
-            quick-tap-ms = <175>;
-            require-prior-idle-ms = <125>;
-            bindings = <&kp>, <&kp>;
-            hold-trigger-key-positions = <KEYS_R THUMBS>;
-            hold-trigger-on-release;
-            hold-while-undecided;
-        };
-
-        /* Левый Ctrl: Bilateral + hold-while-undecided для мгновенных Ctrl+Click трекболом */
-        brm_l_ctl: bottom_row_mod_left_ctrl {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <200>;
-            quick-tap-ms = <175>;
-            require-prior-idle-ms = <125>;
-            bindings = <&kp>, <&kp>;
-            hold-trigger-key-positions = <KEYS_R THUMBS>;
-            hold-trigger-on-release;
-            hold-while-undecided;
-        };
-
-        /* Правый Ctrl: Bilateral + hold-while-undecided */
-        brm_r_ctl: bottom_row_mod_right_ctrl {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <200>;
-            quick-tap-ms = <175>;
-            require-prior-idle-ms = <125>;
-            bindings = <&kp>, <&kp>;
-            hold-trigger-key-positions = <KEYS_L THUMBS>;
-            hold-trigger-on-release;
-            hold-while-undecided;
-        };
-
-        /* Правый Shift: Bilateral + hold-while-undecided (аппаратная защита ролла "ый") */
-        brm_r_sft: bottom_row_mod_right_shift {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <200>;
-            quick-tap-ms = <175>;
-            require-prior-idle-ms = <125>;
-            bindings = <&kp>, <&kp>;
-            hold-trigger-key-positions = <KEYS_L THUMBS>;
-            hold-trigger-on-release;
-            hold-while-undecided;
-        };
-
-        /* Правые BRM (ALT, GUI): Bilateral без hold-while-undecided */
+        /* Правые BRM (CTRL, SHIFT, ALT, GUI): Bilateral Combinations */
         brm_r: bottom_row_mod_right {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
@@ -105,7 +51,65 @@
             hold-trigger-on-release;
         };
 
-        /* Совместимость со старыми именами (hml, hmr) для ZMK Studio */
+        /* Псевдонимы для совместимости */
+        brm_l_sft: brm_left_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <KEYS_R THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        brm_l_ctl: brm_left_ctrl {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <KEYS_R THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        brm_r_ctl: brm_right_ctrl {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <KEYS_L THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        brm_r_sft: brm_right_shift {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <KEYS_L THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        /* Поведение для слоя Fn: удержание = модификатор, тап = ничего */
+        ht_none: hold_tap_none {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "hold-preferred";
+            tapping-term-ms = <175>;
+            bindings = <&kp>, <&none>;
+        };
+
+        /* Совместимость с именами hml, hmr для ZMK Studio */
         hml: home_row_mod_left {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
@@ -130,7 +134,7 @@
             hold-trigger-on-release;
         };
 
-        /* Быстрый Layer-Tap с автоповтором клавиши по двойному нажатию */
+        /* Быстрый Layer-Tap */
         lt_q: layer_tap_quick {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;

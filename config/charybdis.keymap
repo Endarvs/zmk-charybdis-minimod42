@@ -78,14 +78,14 @@
             >;
         };
 
-        /* ── 3: FN — F1..F12, цифры, медиа и Pipe (из Foostan Corne.vil Layer 3) ── */
+        /* ── 3: FN — F1..F12, цифры, медиа и BRM (с Vol- / Vol+ и вызовом Win/Alt меню) ── */
         fn_layer {
             display-name = "Fn";
             bindings = <
-                &kp F1        &kp F2    &kp F3     &kp F4     &kp F5     &kp F6       &kp F7   &kp F8     &kp F9      &kp F10           &kp F11           &kp F12
-                &tog 2        &kp N1    &kp N2     &kp N3     &kp N4     &kp N5       &kp N6   &kp N7     &kp N8      &kp N9            &kp N0            &kp LA(PG_UP)
-                &kp LC(BSLH)  &kp RGUI  &kp LALT   &kp LSHFT  &kp LCTRL  &kp CAPS     &kp F19  &kp RCTRL  &kp C_MUTE  &kp LA(C_VOL_DN)  &kp RG(C_VOL_UP)  &kp LA(PG_DN)
-                                                   &mo 5      &trans     &mo 5        &trans   &trans     &trans
+                &kp F1        &kp F2          &kp F3          &kp F4           &kp F5          &kp F6       &kp F7   &kp F8            &kp F9      &kp F10                 &kp F11                 &kp F12
+                &tog 2        &kp N1          &kp N2          &kp N3           &kp N4          &kp N5       &kp N6   &kp N7            &kp N8      &kp N9                  &kp N0                  &kp LA(PG_UP)
+                &kp LC(BSLH)  &ht_none RGUI 0 &ht_none LALT 0 &ht_none LSHFT 0 &ht_none LCTRL 0 &kp CAPS    &kp F19  &ht_none RCTRL 0  &kp C_MUTE  &brm_r LALT C_VOL_DN    &brm_r RGUI C_VOL_UP    &kp LA(PG_DN)
+                                                              &mo 5            &trans          &mo 5        &trans   &trans            &trans
             >;
         };
 

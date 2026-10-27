@@ -1,11 +1,11 @@
 /*
  * Комбо-сочетания для Charybdis Mini MOD (42 клавиши: 3x6 + 3L/3R Thumbs)
  *
- * Точные комбо вместо отсутствующих центральных клавиш Corne V4:
+ * Точные комбо:
  *   R + T (04 + 05) -> Esc
  *   F + G (16 + 17) -> Tab
- *   Y + I (06 + 08) -> LSA(2) (Переключение на EN в Windows)
- *   H + J (18 + 19) -> LSA(3) (Переключение на RU в Windows)
+ *   U + I (07 + 08) -> LSA(2) (Переключение на EN в Windows)
+ *   J + K (19 + 20) -> LSA(3) (Переключение на RU в Windows)
  */
 
 / {
@@ -28,18 +28,18 @@
             layers = <0 1 2 3>;
         };
 
-        /* Y + I (6 + 8) -> LSA(2) (EN) */
+        /* U + I (7 + 8) -> LSA(2) (EN) */
         combo_lsa2_en {
             timeout-ms = <50>;
-            key-positions = <6 8>;
+            key-positions = <7 8>;
             bindings = <&kp LA(LS(N2))>;
             layers = <0 1 2 3>;
         };
 
-        /* H + J (18 + 19) -> LSA(3) (RU) */
+        /* J + K (19 + 20) -> LSA(3) (RU) */
         combo_lsa3_ru {
             timeout-ms = <50>;
-            key-positions = <18 19>;
+            key-positions = <19 20>;
             bindings = <&kp LA(LS(N3))>;
             layers = <0 1 2 3>;
         };
