@@ -2,29 +2,31 @@
  * Комбо-сочетания для Charybdis Mini MOD (42 клавиши: 3x6 + 3L/3R Thumbs)
  *
  * Точные комбо:
- *   R + T (04 + 05) -> Esc
- *   F + G (16 + 17) -> Tab
- *   U + I (07 + 08) -> LSA(2) (Переключение на EN в Windows)
- *   J + K (19 + 20) -> LSA(3) (Переключение на RU в Windows)
+ *   W + E (02 + 03) -> Esc (с защитой от роллов require-prior-idle-ms = 150)
+ *   S + D (14 + 15) -> Tab (с защитой от роллов require-prior-idle-ms = 150)
+ *   U + I (07 + 08) -> lang_en (Alt+Shift+2 в Windows)
+ *   J + K (19 + 20) -> lang_ru (Alt+Shift+3 в Windows)
  */
 
 / {
     combos {
         compatible = "zmk,combos";
 
-        /* R + T (4 + 5) -> Esc */
+        /* W + E (2 + 3) -> Esc */
         combo_esc {
             timeout-ms = <45>;
-            key-positions = <4 5>;
+            key-positions = <2 3>;
             bindings = <&kp ESC>;
+            require-prior-idle-ms = <150>;
             layers = <0 1 2 3>;
         };
 
-        /* F + G (16 + 17) -> Tab */
+        /* S + D (14 + 15) -> Tab */
         combo_tab {
             timeout-ms = <45>;
-            key-positions = <16 17>;
+            key-positions = <14 15>;
             bindings = <&kp TAB>;
+            require-prior-idle-ms = <150>;
             layers = <0 1 2 3>;
         };
 
@@ -33,6 +35,7 @@
             timeout-ms = <50>;
             key-positions = <7 8>;
             bindings = <&lang_en>;
+            require-prior-idle-ms = <150>;
             layers = <0 1 2 3>;
         };
 
@@ -41,6 +44,7 @@
             timeout-ms = <50>;
             key-positions = <19 20>;
             bindings = <&lang_ru>;
+            require-prior-idle-ms = <150>;
             layers = <0 1 2 3>;
         };
     };
