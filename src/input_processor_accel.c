@@ -74,12 +74,14 @@ static int64_t last_typing_ms = 0;
 static int64_t last_accum_ms = 0;
 static uint32_t auto_mouse_px_accum = 0;
 static uint32_t held_mouse_keys_mask = 0;
+static uint64_t phys_held_positions = 0;
 
 /* Positions on Layer 6 that act as Mouse Buttons / Scroll / Snipe / Thumbs */
 static int mouse_hold_bit_for_pos(uint32_t pos) {
     switch (pos) {
     case 3:  return 0; /* E = Scroll */
     case 4:  return 1; /* R = Snipe */
+    case 8:  return 8; /* I = Scroll */
     case 14: return 2; /* S = RCLK */
     case 15: return 3; /* D = MCLK */
     case 16: return 4; /* F = LCLK */
@@ -147,6 +149,30 @@ static void force_deactivate_auto_mouse_work_cb(struct k_work *work) {
 
 static K_WORK_DEFINE(force_deactivate_auto_mouse_work, force_deactivate_auto_mouse_work_cb);
 
+static void panic_layer_cleanup_work_cb(struct k_work *work) {
+    ARG_UNUSED(work);
+    k_work_cancel_delayable(&auto_mouse_disable_work);
+    held_mouse_keys_mask = 0;
+    auto_mouse_px_accum = 0;
+    auto_mouse_active = false;
+
+    /* Deactivate all transient / toggled layers 1..8 (while preserving 9=Manual and 10=MuteTB).
+     * Keep layer 3 (Fn) active only if thumb 36 is still physically held down.
+     */
+    static const uint8_t transient_layers[] = { 1, 2, 4, 5, 6, 7, 8 };
+    for (size_t i = 0; i < ARRAY_SIZE(transient_layers); i++) {
+        uint8_t l = transient_layers[i];
+        if (zmk_keymap_layer_active(l)) {
+            zmk_keymap_layer_deactivate(l, false);
+        }
+    }
+    if ((phys_held_positions & BIT64(36)) == 0 && zmk_keymap_layer_active(3)) {
+        zmk_keymap_layer_deactivate(3, false);
+    }
+}
+
+static K_WORK_DELAYABLE_DEFINE(panic_layer_cleanup_work, panic_layer_cleanup_work_cb);
+
 static void sync_layers_work_cb(struct k_work *work) {
     ARG_UNUSED(work);
     syncing_layers = true;
@@ -190,6 +216,19 @@ void charybdis_runtime_on_config_updated(void) {
 static int charybdis_pointer_event_listener(const zmk_event_t *eh) {
     const struct zmk_position_state_changed *pos_ev = as_zmk_position_state_changed(eh);
     if (pos_ev != NULL) {
+        if (pos_ev->position < 64) {
+            if (pos_ev->state) {
+                phys_held_positions |= BIT64(pos_ev->position);
+            } else {
+                phys_held_positions &= ~BIT64(pos_ev->position);
+            }
+        }
+
+        /* Panic Key on Fn layer (layer 3, position 12): reset all transient/toggled layers & mouse state */
+        if (pos_ev->state && pos_ev->position == 12 && zmk_keymap_layer_active(3)) {
+            k_work_reschedule(&panic_layer_cleanup_work, K_MSEC(25));
+        }
+
         int hold_bit = mouse_hold_bit_for_pos(pos_ev->position);
         if (!pos_ev->state) {
             /* Key released */

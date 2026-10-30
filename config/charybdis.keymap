@@ -76,18 +76,18 @@
             bindings = <
                 &mo 6       &kp LC(Z)  &kp HOME        &kp UP       &kp PG_UP           &kp LC(C)    &kp EQUAL  &kp KP_N7           &kp KP_N8           &kp KP_N9          &kp KP_MINUS        &kp KP_SLASH
                 &kp LC(A)   &none      &kp LEFT        &kp DOWN     &kp RIGHT           &kp LC(X)    &kp BSPC   &kp KP_N4           &kp KP_N5           &kp KP_N6          &kp KP_PLUS         &kp KP_ASTERISK
-                &trans      &kp RGUI   &brm_l LALT END &kp LSHFT    &brm_l LCTRL PG_DN  &kp LC(V)    &kp SPACE  &brm_r RCTRL KP_N1  &brm_r RSHFT KP_N2  &brm_r LALT KP_N3  &brm_r RGUI KP_DOT  &trans
+                &trans      &kp LGUI   &brm_l LALT END &kp LSHFT    &brm_l LCTRL PG_DN  &kp LC(V)    &kp SPACE  &brm_r RCTRL KP_N1  &brm_r RSHFT KP_N2  &brm_r LALT KP_N3  &brm_r LGUI KP_DOT  &trans
                                                        &trans       &trans              &trans       &trans     &kp KP_N0           &trans
             >;
         };
 
-        /* ── 3: FN — F1..F12, цифры, медиа и BRM (с Vol- / Vol+ и вызовом Win/Alt меню) ── */
+        /* ── 3: FN — F1..F12, цифры, медиа, BRM и Клавиша паники (&panic_reset на поз. 12) ── */
         fn_layer {
             display-name = "Fn";
             bindings = <
                 &kp F1        &kp F2          &kp F3          &kp F4           &kp F5          &kp F6       &kp F7   &kp F8            &kp F9      &kp F10                 &kp F11                 &kp F12
-                &tog 2        &kp N1          &kp N2          &kp N3           &kp N4          &kp N5       &kp N6   &kp N7            &kp N8      &kp N9                  &kp N0                  &kp LA(PG_UP)
-                &kp LC(BSLH)  &ht_none RGUI 0 &ht_none LALT 0 &ht_none LSHFT 0 &ht_none LCTRL 0 &kp CAPS    &kp F19  &ht_none RCTRL 0  &brm_r RSHFT C_MUTE  &brm_r LALT C_VOL_DN    &brm_r RGUI C_VOL_UP    &kp LA(PG_DN)
+                &panic_reset  &kp N1          &kp N2          &kp N3           &kp N4          &kp N5       &kp N6   &kp N7            &kp N8      &kp N9                  &kp N0                  &kp LA(PG_UP)
+                &kp LC(BSLH)  &ht_none LGUI 0 &ht_none LALT 0 &ht_none LSHFT 0 &ht_none LCTRL 0 &kp CAPS    &kp F19  &ht_none RCTRL 0  &brm_r RSHFT C_MUTE  &brm_r LALT C_VOL_DN    &brm_r LGUI C_VOL_UP    &kp LA(PG_DN)
                                                               &mo 5            &trans          &mo 5        &trans   &trans            &trans
             >;
         };
